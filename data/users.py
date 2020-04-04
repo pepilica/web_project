@@ -1,0 +1,43 @@
+from datetime import datetime
+import sqlalchemy
+from sqlalchemy_serializer import SerializerMixin
+from data.messages import Message
+from .db_session import SqlAlchemyBase
+from sqlalchemy import orm
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask_login import UserMixin
+
+
+class User(SqlAlchemyBase, UserMixin, SerializerMixin):
+    __tablename__ = 'users'
+    id = sqlalchemy.Column(sqlalchemy.Integer,
+                           primary_key=True, autoincrement=True)
+    surname = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    name = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    hometown = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    address = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    email = sqlalchemy.Column(sqlalchemy.String,
+                              index=True, unique=True, nullable=True)
+    hashed_password = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    mobile_telephone = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, unique=True)
+    deals_number = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    rating = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
+    products = orm.relation("Product", back_populates='owner')
+    messages_sent = orm.relation('Message', foreign_keys='Message.sender_id', backref='author', lazy='dynamic')
+    messages_received = orm.relationship('Message', foreign_keys='Message.recipient_id',
+                                         backref='recipient', lazy='dynamic')
+    last_message_read_time = sqlalchemy.Column(sqlalchemy.DateTime)
+
+    def set_password(self, password):
+        self.hashed_password = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.hashed_password, password)
+
+    def __repr__(self):
+        return f'<Пользователь - {self.nickname}>'
+
+    def new_messages(self):
+        last_time = self.last_message_read_time or datetime(1900, 1, 1)
+        return Message.query.filter_by(recipient=self).filter(
+            Message.timestamp > last_time).count()

@@ -78,6 +78,8 @@ class UsersListResource(Resource):
             return jsonify({'error': 'Неправильный запрос'})
         if session.query(User).filter(User.email == args['email']).first():
             return jsonify({'error': 'Пользователь с таким email уже существует'})
+        if session.query(User).filter(User.mobile_telephone == args['mobile_telephone']).first():
+            return jsonify({'error': 'Пользователь с таким номером телефона уже существует'})
         user = User(
             name=args['name'],
             surname=args['surname'],

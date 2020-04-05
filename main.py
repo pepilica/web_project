@@ -15,6 +15,7 @@ from data.photos_resource import PhotosListResource, PhotosResource
 import os
 import base64
 from PIL import Image
+from data.checkers import check_photo
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -76,6 +77,10 @@ def register():
             if form.photo.data.content_type in ('image/png', 'image/jpeg'):
                 photo = io.BytesIO(form.photo.data.read())
                 photograph = Image.open(photo)
+                if not check_photo(photograph):
+                    return render_template('register.html', title='Register',
+                                           form=form,
+                                           message='Фотография не подходит по размеру', current_user=current_user)
                 photograph.save(photo, format='PNG')
                 response_photo = post('http://127.0.0.1:8080/api/photos', json={
                     'photo': base64.b64encode(photo.getvalue()).decode()
@@ -99,6 +104,7 @@ def register():
             'password': form.password.data,
             'photo_id': photo_output
         }).json()
+        print(response)
         if 'success' in response.keys():
             return redirect('/')
         else:

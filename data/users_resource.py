@@ -20,16 +20,16 @@ class UsersResource(Resource):
     def get(self, user_id):
         id_check(user_id)
         session = db_session.create_session()
-        user = session.query(User).get(User.id)
+        user = session.query(User).get(user_id)
         return jsonify({
             'user': user.to_dict(only=('name', 'surname', 'hometown', 'mobile_telephone', 'deals_number', 'rating',
-                                       'photo_id', 'address'))
+                                       'photo_id', 'address', 'email'))
         })
 
     def delete(self, user_id):
         id_check(user_id)
         session = db_session.create_session()
-        user = session.query(User).get(User.id).first()
+        user = session.query(User).get(user_id)
         session.delete(user)
         session.commit()
         return jsonify({'OK': 'Success'})
@@ -64,7 +64,7 @@ class UsersListResource(Resource):
         users = session.query(User).all()
         return jsonify({
             'user': [item.to_dict(only=('name', 'surname', 'hometown', 'mobile_telephone', 'deals_number', 'rating',
-                                        'photo_id', 'address')) for item in users]
+                                        'photo_id', 'address', 'email')) for item in users]
         })
 
     def post(self):
@@ -86,7 +86,8 @@ class UsersListResource(Resource):
             address=args['address'],
             email=args['email'],
             deals_number=0,
-            rating=0
+            rating=0,
+            photo_id=args['photo_id']
         )
         user.set_password(args['password'])
         session.add(user)

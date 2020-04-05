@@ -2,7 +2,7 @@
 
 {% block main %}
 <h1 align="center">Регистрация</h1>
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {{ form.csrf_token }}
     <p>
@@ -77,6 +77,15 @@
         {{ form.address.label }}<br>
         {{ form.address(class="form-control") }}<br>
         {% for error in form.address.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.photo.label }}<br>
+        {{ form.photo(class="form-control") }}<br>
+        {% for error in form.photo.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>

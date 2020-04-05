@@ -22,6 +22,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     mobile_telephone = sqlalchemy.Column(sqlalchemy.Integer, nullable=True, unique=True)
     deals_number = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     rating = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
+    photo_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('photos.id'), nullable=True)
     products = orm.relation("Product", back_populates='owner')
     messages_sent = orm.relation('Message', foreign_keys='Message.sender_id', backref='author', lazy='dynamic')
     messages_received = orm.relationship('Message', foreign_keys='Message.recipient_id',

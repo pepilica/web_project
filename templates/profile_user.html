@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="container">
+    <div class="span3 well">
+        <center>
+        <a href="#aboutModal" data-toggle="modal" data-target="#myModal"><img src="http://127.0.0.1:8080/api/photos/{{parse['photo_id']}}" name="aboutme" width="140" height="140" class="img-circle"></a>
+        <h3>{{parse['name']}} {{parse['surname']}}</h3>
+        <em>click my face for more</em>
+		</center>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
+                    <h4 class="modal-title" id="myModalLabel">More About {{parse['name']}}</h4>
+                    </div>
+                <div class="modal-body">
+                    <center>
+                    <img src="http://127.0.0.1:8080/api/photos/{{parse['photo_id']}}" name="aboutme" width="140" height="140" border="0" class="img-circle"></a>
+                    <h3 class="media-heading">{{parse['name']}} {{parse['surname']}} <small>
+                    </center>
+                    <hr>
+                    <center>
+                    <p class="text-left"><strong>Email: </strong><br>
+                        {{parse['email']}}</p>
+                    <br>
+                    <p class="text-left"><strong>Mobile telephone: </strong><br>
+                        {{parse['mobile_telephone']}}</p>
+                    <br>
+                    </center>
+                </div>
+                <div class="modal-footer">
+                    <center>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">I've heard enough about {{parse['name']}}</button>
+                    </center>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -7,6 +7,7 @@ from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired, Regexp
 from data import db_session
 from data.photos import Photo
+from data.products_resource import ProductsResource, ProductsListResource
 from data.users import User
 from flask_wtf import FlaskForm
 from requests import post, put, get
@@ -15,21 +16,19 @@ from data.photos_resource import PhotosListResource, PhotosResource
 import os
 import base64
 from PIL import Image
-from data.checkers import check_photo
+from data.utils import check_photo
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 login_manager = LoginManager()
 login_manager.init_app(app)
-GEOCODER_API_SERVER = "http://geocode-maps.yandex.ru/1.x/"
-SEARCH_API_SERVER = "https://search-maps.yandex.ru/v1/"
-STATIC_API_SERVER = "http://static-maps.yandex.ru/1.x/"
-GEOCODER_APIKEY = '40d1649f-0493-4b70-98ba-98533de7710b'
 user_api = Api(app)
 user_api.add_resource(UsersResource, '/api/users/<int:user_id>')
 user_api.add_resource(UsersListResource, '/api/users')
 user_api.add_resource(PhotosResource, '/api/photos/<int:photo_id>')
 user_api.add_resource(PhotosListResource, '/api/photos')
+user_api.add_resource(ProductsResource, '/api/products/<int:product_id>')
+user_api.add_resource(ProductsListResource, '/api/products')
 
 
 class RegisterForm(FlaskForm):

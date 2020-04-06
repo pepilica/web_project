@@ -13,7 +13,15 @@ class Product(SqlAlchemyBase, SerializerMixin):
                                 sqlalchemy.ForeignKey("users.id"))
     owner = orm.relation('User')
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
-    cost = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
+    cost = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
+    category = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('categories.id'))
+    is_active = sqlalchemy.Column(sqlalchemy.Boolean)
+    photos = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    point_longitude = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
+    point_latitude = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
+    radius = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
+    contact_email = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    contact_number = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     def __repr__(self):
         return f'<Товар - {self.name}>'

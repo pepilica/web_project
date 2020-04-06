@@ -9,4 +9,4 @@ class Category(SqlAlchemyBase):
     category = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
 
     def __repr__(self):
-        return self.hazard
+        return f'<Категория - {self.category} - {self.id}>'

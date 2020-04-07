@@ -125,7 +125,7 @@ def login():
             'password': form.password.data
         }).json()
         print(response)
-        if 'OK' in response.keys():
+        if 'success' in response.keys():
             session = db_session.create_session()
             user = session.query(User).get(response['user_id'])
             print(form.remember_me.data)

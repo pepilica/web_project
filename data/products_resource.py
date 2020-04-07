@@ -2,6 +2,7 @@ from flask import jsonify, request
 from flask.views import MethodView
 from flask_login import current_user
 from requests import get
+from sqlalchemy import or_
 
 from data.distance import lonlat_distance
 from flask_restful import reqparse, Api, Resource, abort
@@ -45,7 +46,7 @@ class ProductsResource(Resource):
         product = session.query(Product).get(product_id)
         session.delete(product)
         session.commit()
-        return jsonify({'OK': 'Success'})
+        return jsonify({'success': 'OK'})
 
     def put(self, product_id):
         try:
@@ -67,7 +68,7 @@ class ProductsResource(Resource):
             product.contact_number = args['number']
             product.longitude, product.latitude = map(float, args['point'].split(' '))
             session.commit()
-            return get('http://127.0.0.1:8080/api/products/1').json()
+            return jsonify({'success': 'OK'})
         except Exception:
             return jsonify({'error': 'Неправильный запрос'})
 
@@ -75,7 +76,18 @@ class ProductsResource(Resource):
 class ProductsListResource(Resource):
     def get(self):
         session = db_session.create_session()
-        products = session.query(Product).filter(Product.is_active is True)
+        products = session.query(Product).filter(Product.is_active == 1)
+        if request.json:
+            args = request.json
+            for query in args.keys():
+                if query == 'cost':
+                    mi, ma = map(int, args['cost'].split(','))
+                    print(mi, ma)
+                    products = products.filter(mi <= Product.cost).filter(Product.cost <= ma)
+                elif query == 'name':
+                    products = products.filter(Product.name.like(f'%{args["name"]}%'))
+                elif query == 'category':
+                    products = products.filter(Product.name == args['category'])
         return jsonify({
             'product': [item.to_dict(only=('name', 'user_id', 'description', 'cost', 'is_active', 'photos',
                                            'point_longitude', 'point_latitude', 'radius', 'contact_email',

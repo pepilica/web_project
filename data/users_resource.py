@@ -32,7 +32,7 @@ class UsersResource(Resource):
         user = session.query(User).get(user_id)
         session.delete(user)
         session.commit()
-        return jsonify({'OK': 'Success'})
+        return jsonify({'success': 'OK'})
 
     def put(self, user_id):
         try:
@@ -109,7 +109,7 @@ class UsersListResource(Resource):
                 return jsonify({'error': 'Пользователя с таким email не существует'})
             if not user.check_password(args['password']):
                 return jsonify({'error': 'Неверный пароль'})
-            return jsonify({'OK': 'Success', 'user_id': user.id})
+            return jsonify({'success': 'OK', 'user_id': user.id})
         except Exception as e:
             print(e)
             return jsonify({'error': 'Неправильный запрос'})

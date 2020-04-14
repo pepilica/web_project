@@ -12,6 +12,7 @@ class Product(SqlAlchemyBase, SerializerMixin):
     user_id = sqlalchemy.Column(sqlalchemy.Integer,
                                 sqlalchemy.ForeignKey("users.id"))
     owner = orm.relation('User')
+    date = sqlalchemy.Column(sqlalchemy.DateTime, nullable=True)
     description = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     cost = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     category = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('categories.id'))

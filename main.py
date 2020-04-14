@@ -1,21 +1,27 @@
+import base64
 import io
-from flask import Flask, render_template, redirect, jsonify, make_response, request
+import os
+from datetime import datetime
+
+from paginate_sqlalchemy import SqlalchemyOrmPage
+from PIL import Image
+from flask import Flask, render_template, redirect, jsonify, make_response, request, flash, url_for, current_app, \
+    get_flashed_messages
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, FileField
 from flask_restful import Api
-from wtforms.fields.html5 import EmailField
-from wtforms.validators import DataRequired, Regexp
-from data import db_session
-from data.photos import Photo
-from data.products_resource import ProductsResource, ProductsListResource
-from data.users import User
 from flask_wtf import FlaskForm
 from requests import post, put, get
-from data.users_resource import UsersListResource, UsersResource
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, FileField, TextAreaField
+from wtforms.fields.html5 import EmailField
+from wtforms.validators import DataRequired, Length
+from data.constants import POSTS_PER_PAGE
+
+from data import db_session
+from data.messages import Message
 from data.photos_resource import PhotosListResource, PhotosResource
-import os
-import base64
-from PIL import Image
+from data.products_resource import ProductsResource, ProductsListResource
+from data.users import User
+from data.users_resource import UsersListResource, UsersResource
 from data.utils import check_photo
 
 app = Flask(__name__)
@@ -49,6 +55,12 @@ class LoginForm(FlaskForm):
     password = PasswordField('Пароль', validators=[DataRequired()])
     remember_me = BooleanField('Запомнить меня')
     submit = SubmitField('Войти!')
+
+
+class MessageForm(FlaskForm):
+    message = TextAreaField('Message', validators=[
+        DataRequired(), Length(min=0, max=140)])
+    submit = SubmitField('Submit')
 
 
 @login_manager.user_loader
@@ -142,14 +154,7 @@ def login():
 @app.route('/')
 @app.route('/index')
 def main():
-    session = db_session.create_session()
-    print(session.query(Photo).all())
     return render_template('base.html', title='Index', current_user=current_user)
-
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify({'error': 'Not found'}), 404)
 
 
 @app.route('/logout')
@@ -159,11 +164,68 @@ def logout():
     return redirect("/")
 
 
+@app.route('/products', methods=['POST', 'GET'])
+def products_main():
+    pass
+
+
 @app.route('/users/<int:user_id>')
 def user_profile(user_id):
     response = get(f'http://127.0.0.1:8080/api/users/{user_id}').json()
     if 'user' in response.keys():
         return render_template('profile_user.html', title='Пользователь', parse=response['user'])
+
+
+@app.route('/send_message/<user_id>', methods=['GET', 'POST'])
+@login_required
+def send_message(user_id):
+    session = db_session.create_session()
+    work_user = session.query(User).get(current_user.id)
+    user = session.query(User).get(user_id)
+    session.commit()
+    form = MessageForm()
+    if form.validate_on_submit():
+        msg = Message(author=work_user, recipient=user,
+                      body=form.message.data)
+        session = db_session.create_session()
+        session.merge(msg)
+        session.commit()
+        flash('Сообщение отправлено!')
+        return redirect(f'/users/{user_id}')
+    return render_template('send_message.html', title='Send Message',
+                           form=form, user=user)
+
+
+@app.route('/messages')
+@login_required
+def messages():
+    session = db_session.create_session()
+    current_user.last_message_read_time = datetime.utcnow()
+    session.merge(current_user)
+    session.commit()
+    session = db_session.create_session()
+    page = request.args.get('page', 1, type=int)
+    user = session.query(User).get(current_user.id)
+    session.commit()
+    next_url, prev_url = None, None
+    messages = user.messages_received.order_by(
+        Message.timestamp.desc())
+    if messages:
+        page_cur = SqlalchemyOrmPage(messages, page=page, items_per_page=5)
+        if page <= page_cur.item_count:
+            next_url = '/messages?page=' + str(page + 1) \
+                if page + 1 <= page_cur.page_count else None
+            prev_url = '/messages?page=' + str(page - 1) \
+                if page > 1 else None
+            query = page_cur.items
+            print(page, query)
+            print(next_url, prev_url)
+        else:
+            return redirect('/messages?page=' + page_cur.item_count)
+    else:
+        query = messages.all()
+    return render_template('messages.html', messages=query,
+                           next_url=next_url, prev_url=prev_url)
 
 
 if __name__ == '__main__':

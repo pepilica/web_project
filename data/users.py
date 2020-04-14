@@ -6,6 +6,7 @@ from .db_session import SqlAlchemyBase
 from sqlalchemy import orm
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_login import UserMixin
+from data import db_session
 
 
 class User(SqlAlchemyBase, UserMixin, SerializerMixin):
@@ -24,9 +25,9 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     rating = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
     photo_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('photos.id'), nullable=True)
     products = orm.relation("Product", back_populates='owner')
-    messages_sent = orm.relation('Message', foreign_keys='Message.sender_id', backref='author', lazy='dynamic')
+    messages_sent = orm.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy='dynamic')
     messages_received = orm.relationship('Message', foreign_keys='Message.recipient_id',
-                                         backref='recipient', lazy='dynamic')
+                                     backref='recipient', lazy='dynamic')
     last_message_read_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
     def set_password(self, password):
@@ -35,10 +36,8 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     def check_password(self, password):
         return check_password_hash(self.hashed_password, password)
 
-    def __repr__(self):
-        return f'<Пользователь - {self.nickname}>'
-
     def new_messages(self):
+        session = db_session.create_session()
         last_time = self.last_message_read_time or datetime(1900, 1, 1)
-        return Message.query.filter_by(recipient=self).filter(
+        return session.query(Message).filter_by(recipient=self).filter(
             Message.timestamp > last_time).count()

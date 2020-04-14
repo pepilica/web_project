@@ -3,13 +3,13 @@ from flask.views import MethodView
 from flask_login import current_user
 from requests import get
 from sqlalchemy import or_
-
 from data.distance import lonlat_distance
 from flask_restful import reqparse, Api, Resource, abort
 from data.products import Product
 from data import db_session
 from data.users import User
 from data.utils import get_coordinates
+from datetime import datetime
 
 CREATE_ARR = ['name', 'user_id', 'description', 'cost', 'photos', 'point',
               'radius', 'email', 'number']
@@ -77,6 +77,7 @@ class ProductsListResource(Resource):
     def get(self):
         session = db_session.create_session()
         products = session.query(Product).filter(Product.is_active == 1)
+        length = len(products.all())
         if request.json:
             args = request.json
             for query in args.keys():
@@ -88,10 +89,22 @@ class ProductsListResource(Resource):
                     products = products.filter(Product.name.like(f'%{args["name"]}%'))
                 elif query == 'category':
                     products = products.filter(Product.name == args['category'])
+            if 'sort_by' in args.keys():
+                if args['sort_by'] == 'date':
+                    products = products.filter(Product.date.desc())
+            length = len(products.all())
+            if args.get('paginate') in args.keys():
+                if 'posts_per_page' in args.keys():
+                    products = products.paginate(args.get('page', 1), args['post_per_page'], False).items
+                    with open('otvet.txt', mode='r') as f:
+                        f.write(products)
+        else:
+            products = products.all()
         return jsonify({
             'product': [item.to_dict(only=('name', 'user_id', 'description', 'cost', 'is_active', 'photos',
                                            'point_longitude', 'point_latitude', 'radius', 'contact_email',
-                                           'contact_number')) for item in products.all()]
+                                           'contact_number')) for item in products],
+            'total': length
         })
 
     def post(self):
@@ -115,7 +128,8 @@ class ProductsListResource(Resource):
             point_latitude=point_latitude,
             radius=args['radius'],
             contact_number=args['number'],
-            contact_email=args['email']
+            contact_email=args['email'],
+            date=datetime.now()
         )
         session.add(product)
         session.commit()

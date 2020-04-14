@@ -7,6 +7,7 @@ from data.users import User
 from data import db_session
 from io import BytesIO
 import base64
+from thunderargs import Arg
 
 
 def id_check(photo_id):
@@ -21,9 +22,10 @@ class PhotosResource(Resource):
     def get(self, photo_id):
         id_check(photo_id)
         session = db_session.create_session()
-        print(session.query(Photo).all())
         photo = session.query(Photo).get(photo_id)
-        print(photo.photo)
+        #  if request.args:
+        #    length, height = request.args['size'].split(',')
+        #    photograph = Image.open(BytesIO(photo.photo))
         return send_file(
                 BytesIO(photo.photo),
                 mimetype='image/png',

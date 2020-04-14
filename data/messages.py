@@ -5,11 +5,9 @@ from .db_session import SqlAlchemyBase
 
 class Message(SqlAlchemyBase):
     __tablename__ = 'messages'
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
+    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     sender_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'))
     recipient_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('users.id'))
     body = sqlalchemy.Column(sqlalchemy.String(140))
     timestamp = sqlalchemy.Column(sqlalchemy.DateTime, index=True, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<Сообщение - {self.body}>'

@@ -41,3 +41,6 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
         last_time = self.last_message_read_time or datetime(1900, 1, 1)
         return session.query(Message).filter_by(recipient=self).filter(
             Message.timestamp > last_time).count()
+
+    def __repr__(self):
+        return f'<Пользователь - {self.name} {self.surname}>'

@@ -1,9 +1,22 @@
 import requests
 import PIL
+from flask import jsonify
 from flask_restful import abort
 from data import db_session
 from data.constants import GEOCODER_APIKEY, GEOCODER_API_SERVER
 from data.users import User
+
+
+def success():
+    return jsonify({'success': 'OK'})
+
+
+def wrong_query():
+    return jsonify({'error': 'Неправильный запрос'})
+
+
+def blank_query():
+    return jsonify({'error': 'Пустой запрос'})
 
 
 def check_address(address):

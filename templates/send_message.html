@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block main %}
+<h1>Отправить сообщение пользователю {{user.name}} {{user.surname}}</h1>
+<div class="row">
+    <div class="col-md-4">
+    	<form action="" method="post" enctype="multipart/form-data">
+	    {{ form.hidden_tag() }}
+	    {{ form.csrf_token }}
+	    <p>
+	        {{ form.message.label }}<br>
+	        {{ form.message(class="form-control") }}<br>
+	        {% for error in form.message.errors %}
+	            <p class="alert alert-danger" role="alert">
+	                {{ error }}
+	            </p>
+	        {% endfor %}
+	    </p>
+	    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+	    {{message}}
+		</form>
+    </div>
+</div>
+{% endblock %}

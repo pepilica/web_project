@@ -3,7 +3,7 @@ from flask.views import MethodView
 from flask_restful import reqparse, Api, Resource, abort
 from data.users import User
 from data import db_session
-
+from data.utils import success, wrong_query, blank_query
 
 REGISTER_ARR = ['name', 'surname', 'hometown', 'mobile_telephone', 'address', 'email', 'password']
 LOGIN_ARR = ['email', 'password']
@@ -32,15 +32,15 @@ class UsersResource(Resource):
         user = session.query(User).get(user_id)
         session.delete(user)
         session.commit()
-        return jsonify({'success': 'OK'})
+        return success()
 
     def put(self, user_id):
         try:
             id_check(user_id)
             if not request.json:
-                return jsonify({'error': 'Пустой запрос'})
+                return blank_query()
             elif not all(key in request.json for key in REGISTER_ARR):
-                return jsonify({'error': 'Неправильный запрос'})
+                return wrong_query()
             session = db_session.create_session()
             user = session.query(User).get(User.id).first()
             args = request.json
@@ -53,9 +53,9 @@ class UsersResource(Resource):
             user.set_password(args['password'])
             user.photo_id = args['photo_id']
             session.commit()
-            return jsonify({'OK': 'Success'})
+            return success()
         except Exception:
-            return jsonify({'error': 'Неправильный запрос'})
+            return wrong_query()
 
 
 class UsersListResource(Resource):
@@ -73,9 +73,9 @@ class UsersListResource(Resource):
         print(args)
         print(list(key in args for key in REGISTER_ARR))
         if not args:
-            return jsonify({'error': 'Пустой запрос'})
+            return blank_query()
         elif not all(key in args for key in REGISTER_ARR):
-            return jsonify({'error': 'Неправильный запрос'})
+            return wrong_query()
         if session.query(User).filter(User.email == args['email']).first():
             return jsonify({'error': 'Пользователь с таким email уже существует'})
         if session.query(User).filter(User.mobile_telephone == args['mobile_telephone']).first():
@@ -94,16 +94,16 @@ class UsersListResource(Resource):
         user.set_password(args['password'])
         session.add(user)
         session.commit()
-        return jsonify({'success': 'OK'})
+        return success()
     
     def put(self):
         try:
             session = db_session.create_session()
             args = request.json
             if not args:
-                return jsonify({'error': 'Пустой запрос'})
+                return blank_query()
             elif not all(key in args for key in LOGIN_ARR):
-                return jsonify({'error': 'Неправильный запрос'})
+                return wrong_query()
             user = session.query(User).filter(User.email == args['email']).first()
             if not user:
                 return jsonify({'error': 'Пользователя с таким email не существует'})
@@ -112,4 +112,4 @@ class UsersListResource(Resource):
             return jsonify({'success': 'OK', 'user_id': user.id})
         except Exception as e:
             print(e)
-            return jsonify({'error': 'Неправильный запрос'})
+            return wrong_query()

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class="container">
+    <br>
+    <h4>Товары</h2>
+	<br>
+    {% for i in range(0, length, 3) %}
+    <div class="row" id="ads">
+    <div class="col-md-4">
+        {% set user = session.query(User).get(products[i]['user_id']) %}
+        <div class="card rounded">
+            <div class="card-image">
+                {% if products[i]['category'] %}
+                <span class="card-notify-badge">{{session.query(Category).get(products[i]['category']).category}}</span>
+                {% else %}
+                <span class="card-notify-badge">Нет категории</span>
+                {% endif %}
+                <img class="img-fluid" src="/api/photos/{{products[i].photos.split(',')[0]}}" />
+            </div>
+            <div class="card-image-overlay m-auto">
+                <span class="card-detail-badge">{{user.hometown}}</span>
+            </div>
+            <div class="card-body text-center">
+                <div class="ad-title m-auto">
+                    <h5>{{products[i]['name']}}</h5>
+                </div>
+                <div class="ad-title m-auto">
+                    <h5>{{user.name}} {{user.surname}}</h5>
+                </div>
+                <div class="ad-title m-auto">
+                    <h5>{{int(products[i]['cost'])}} рублей</h5>
+                </div>
+                <a class="ad-btn" href="/products/{{products[i]['id']}}">Смотреть</a>
+            </div>
+        </div>
+    </div>
+    {% if i + 1 < length %}
+    <div class="col-md-4">
+        {% set user = session.query(User).get(products[i + 1]['user_id']) %}
+        <div class="card rounded">
+            <div class="card-image">
+                {% if products[i + 1]['category'] %}
+                <span class="card-notify-badge">{{session.query(Category).get(products[i + 1]['category']).category}}</span>
+                {% else %}
+                <span class="card-notify-badge">Нет категории</span>
+                {% endif %}
+                <img class="img-fluid" src="/api/photos/{{products[i + 1].photos.split(',')[0]}}" />
+            </div>
+            <div class="card-image-overlay m-auto">
+                <span class="card-detail-badge">{{user.hometown}}</span>
+            </div>
+            <div class="card-body text-center">
+                <div class="ad-title m-auto">
+                    <h5>{{products[i + 1]['name']}}</h5>
+                </div>
+                <div class="ad-title m-auto">
+                    <h5>{{user.name}} {{user.surname}}</h5>
+                </div>
+                <div class="ad-title m-auto">
+                    <h5>{{int(products[i + 1]['cost'])}} рублей</h5>
+                </div>
+                <a class="ad-btn" href="/products/{{products[i + 1]['id']}}">Смотреть</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if i + 2 < length %}
+    <div class="col-md-4">
+        {% set user = session.query(User).get(products[i + 2]['user_id']) %}
+        <div class="card rounded">
+            <div class="card-image">
+                {% if products[i + 2]['category'] %}
+                <span class="card-notify-badge">{{session.query(Category).get(products[i + 2]['category']).category}}</span>
+                {% else %}
+                <span class="card-notify-badge">Нет категории</span>
+                {% endif %}
+                <img class="img-fluid" src="/api/photos/{{products[i].photos.split(',')[0]}}" />
+            </div>
+            <div class="card-image-overlay m-auto">
+                <span class="card-detail-badge">{{user.hometown}}</span>
+            </div>
+            <div class="card-body text-center">
+                <div class="ad-title m-auto">
+                    <h5>{{products[i + 2]['name']}}</h5>
+                </div>
+                <div class="ad-title m-auto">
+                    <h5>{{user.name}} {{user.surname}}</h5>
+                </div>
+                <div class="ad-title m-auto">
+                    <h5>{{int(products[i + 2]['cost'])}} рублей</h5>
+                </div>
+                <a class="ad-btn" href="/products/{{products[i + 2]['id']}}">Смотреть</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+<div class="panel-group" id="collapse-group">
+    <div class="panel panel-info">
+      <div class="panel-heading">
+          <a data-toggle="collapse" data-parent="#collapse-group" href="#el1">Фильтр</a>
+        </div>
+      <div id="el1" class="collapse in">
+        <div class="panel-body">
+            <form action="" method="post">
+    {{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    <p>
+        {{ form.name.label }}<br>
+        {{ form.name(class="form-control") }}<br>
+        {% for error in form.name.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.cost_min.label }}<br>
+        {{ form.cost_min(class="form-control") }}<br>
+        {% for error in form.cost_min.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <p>
+        {{ form.cost_max.label }}<br>
+        {{ form.cost_max(class="form-control") }}<br>
+        {% for error in form.cost_max.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    {{ form.category.label }}<br>
+    {% for subfield in form.category %}
+    <tr>
+        <td>{{ subfield }}</td>
+        <td>{{ subfield.label }}</td><br>
+    </tr>
+    {% endfor %}
+    <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    {{message}}
+</form>
+</div>
+      </div>
+    </div>
+</div>
+<br><br><br>
+<nav aria-label="...">
+        <ul class="pager">
+            <li class="previous{% if not prev_url %} disabled{% endif %}">
+                <a href="{{ prev_url or '#' }}">
+                    <span aria-hidden="true">&larr;</span> Назад
+                </a>
+            </li>
+            <li class="next{% if not next_url %} disabled{% endif %}">
+                <a href="{{ next_url or '#' }}">
+                    Вперед <span aria-hidden="true">&rarr;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+{% endblock %}

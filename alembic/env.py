@@ -12,15 +12,18 @@ config = context.config
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
+
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 import sys
+import os
 sys.path.insert(0, '/Users/pepilica/PycharmProjects/web_project')
 from data.db_session import SqlAlchemyBase
 import data.__all_models
 target_metadata = SqlAlchemyBase.metadata
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -66,9 +69,8 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-        render_as_batch=True)
+            connection=connection, target_metadata=target_metadata
+        )
 
         with context.begin_transaction():
             context.run_migrations()

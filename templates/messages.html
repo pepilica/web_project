@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block main %}
+    <h1>Сообщения</h1>
+    {% for post in messages %}
+        <table>
+        <tr valign="top">
+            <td><img src="http://localhost:8080/api/photos/{{ post.author.photo_id }}"></td>
+            <td><a href="http://localhost:8080/users/{{ post.author.id }}">{{ post.author.name }}</a> пишет:<br>{{ post.body }}</td>
+        </tr>
+    </table>
+    {% endfor %}
+    <nav aria-label="...">
+        <ul class="pager">
+            <li class="previous{% if not prev_url %} disabled{% endif %}">
+                <a href="{{ prev_url or '#' }}">
+                    <span aria-hidden="true">&larr;</span> Старые сообщения
+                </a>
+            </li>
+            <li class="next{% if not next_url %} disabled{% endif %}">
+                <a href="{{ next_url or '#' }}">
+                    Новые сообщения <span aria-hidden="true">&rarr;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+{% endblock %}

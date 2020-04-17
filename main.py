@@ -22,7 +22,7 @@ from data.photos_resource import PhotosListResource, PhotosResource
 from data.products_resource import ProductsResource, ProductsListResource
 from data.users import User
 from data.users_resource import UsersListResource, UsersResource
-from data.utils import check_photo, get_coordinates
+from data.utils import check_photo, get_coordinates, get_city, get_address
 from data.constants import CATEGORIES, POSTS_PER_PAGE, SORT_BY
 
 app = Flask(__name__)
@@ -58,7 +58,7 @@ class RegisterForm(FlaskForm):
     password_again = PasswordField('Повторите пароль', validators=[DataRequired()])
     hometown = StringField('Город проживания', validators=[DataRequired()])
     address = StringField('Адрес', validators=[DataRequired()])
-    mobile_telephone = StringField('Мобильный телефон', validators=[DataRequired()])
+    phone = StringField('Мобильный телефон', validators=[DataRequired()])
     photo = FileField('Фотография профиля(не менее 200x200, не более 2000x2000). Форматы: jpg, png.')
     submit = SubmitField('Зарегистрироваться!')
 
@@ -83,10 +83,11 @@ class ProductForm(FlaskForm):
     photos = MultipleFileField('Выберите фотографии (не более 10)', validators=[Length(max=10), Optional()])
     radius = IntegerField('Радиус поиска (в метрах, не более 500 км)', validators=[NumberRange(max=5 * 10 ** 5),
                                                                                    Optional()])
+    actual_address = BooleanField('Показывать фактический адрес', validators=[Optional()])
     geopoint = StringField('Адрес',  validators=[DataRequired()])
     category = RadioField('Категория', choices=[(CATEGORIES[i], i) for i in CATEGORIES.keys()] +
                                                [('no', 'Без категории')], validators=[Optional()])
-    mobile_telephone = StringField('Контактный телефон', validators=[Optional()])
+    phone = StringField('Контактный телефон', validators=[Optional()])
     email = EmailField('Контактный электронный адрес', validators=[Optional()])
     submit = SubmitField('Добавить!')
 
@@ -106,7 +107,7 @@ def register():
         if form.password.data != form.password_again.data:
             return render_template('register.html', title='Register',
                                    form=form,
-                                   message="Пароли не сходятся", current_user=current_user)
+                                   message="Пароли не сходятся", current_user=current_user, args=None)
         print(form.photo.data)
         print(form.photo.data.content_type)
         if not form.photo.data.filename:
@@ -118,7 +119,8 @@ def register():
                 if not check_photo(photograph):
                     return render_template('register.html', title='Register',
                                            form=form,
-                                           message='Фотография не подходит по размеру', current_user=current_user)
+                                           message='Фотография не подходит по размеру', current_user=current_user,
+                                           args=None)
                 photograph.save(photo, format='PNG')
                 response_photo = post('http://localhost:8080/api/photos', json={
                     'photo': base64.b64encode(photo.getvalue()).decode()
@@ -127,16 +129,16 @@ def register():
                 if 'success' not in response_photo.keys():
                     return render_template('register.html', title='Register',
                                            form=form,
-                                           message=response_photo['error'], current_user=current_user)
+                                           message=response_photo['error'], current_user=current_user, args=None)
             else:
                 return render_template('register.html', title='Register',
                                        form=form,
-                                       message='Неверный формат файла', current_user=current_user)
+                                       message='Неверный формат файла', current_user=current_user, args=None)
         response = post('http://localhost:8080/api/users', json={
             'name': form.name.data,
             'surname': form.surname.data,
             'hometown': form.hometown.data,
-            'mobile_telephone': form.mobile_telephone.data,
+            'mobile_telephone': form.phone.data,
             'address': form.address.data,
             'email': form.email.data,
             'password': form.password.data,
@@ -148,8 +150,8 @@ def register():
         else:
             return render_template('register.html', title='Register',
                                    form=form,
-                                   message=response['error'], current_user=current_user)
-    return render_template('register.html', title='Register', form=form, current_user=current_user)
+                                   message=response['error'], current_user=current_user, args=None)
+    return render_template('register.html', title='Register', form=form, current_user=current_user, args=None)
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -173,15 +175,15 @@ def login():
         else:
             return render_template('login.html', title='Login',
                                    form=form,
-                                   message=response['error'], current_user=current_user)
+                                   message=response['error'], current_user=current_user, args=None)
     return render_template('login.html', title='Login',
-                           form=form, current_user=current_user)
+                           form=form, current_user=current_user, args=None)
 
 
 @app.route('/')
 @app.route('/index')
 def main():
-    return render_template('base.html', title='Index', current_user=current_user)
+    return render_template('base.html', title='Index', current_user=current_user, args=None)
 
 
 @app.route('/logout')
@@ -219,7 +221,8 @@ def products_main():
     if 'product' in response.keys():
         return render_template('products.html', products=response['product'], next_url=response['next_url'],
                                prev_url=response['prev_url'], session=db_session.create_session(),
-                               length=len(response['product']), User=User, Category=Category, int=int, form=form)
+                               length=len(response['product']), User=User, Category=Category, int=int, form=form,
+                               get_city=get_city, args=None)
     return redirect('/products')
 
 
@@ -233,13 +236,18 @@ def add_product():
         pics = request.files.getlist(form.photos.name)
         if pics:
             for picture_upload in pics:
+                print(picture_upload.filename)
+                if not picture_upload.filename:
+                    photos = ['2']
+                    break
                 if picture_upload.content_type in ('image/png', 'image/jpeg'):
                     photo = io.BytesIO(picture_upload.read())
                     photograph = Image.open(photo)
                     if not check_photo(photograph):
                         return render_template('register.html', title='Register',
                                                form=form,
-                                               message='Фотография не подходит по размеру', current_user=current_user)
+                                               message='Фотография не подходит по размеру', current_user=current_user,
+                                               args=None)
                     photograph.save(photo, format='PNG')
                     response_photo = post('http://localhost:8080/api/photos', json={
                         'photo': base64.b64encode(photo.getvalue()).decode()
@@ -247,24 +255,30 @@ def add_product():
                     if 'success' not in response_photo.keys():
                         return render_template('register.html', title='Register',
                                                form=form,
-                                               message=response_photo['error'], current_user=current_user)
+                                               message=response_photo['error'], current_user=current_user, args=None)
                     photos.append(str(response_photo['photo_id']))
                 else:
                     return render_template('register.html', title='Register',
                                            form=form,
-                                           message='Неверный формат файла', current_user=current_user)
+                                           message='Неверный формат файла', current_user=current_user, args=None)
         else:
-            photo_output = '2'
+            photos = ['2']
+        if form.actual_address.data:
+            radius = -1
+        elif form.radius.data:
+            radius = form.radius.data
+        else:
+            radius = 500
         print(get_coordinates(form.geopoint.data))
         response = post('http://localhost:8080/api/products', json={
             'user_id': current_user.id,
             'name': form.name.data,
             'description': form.description.data if form.description.data else '',
             'cost': form.cost.data,
-            'number': form.mobile_telephone.data if form.mobile_telephone.data else current_user.mobile_telephone,
+            'number': form.phone.data if form.phone.data else current_user.phone,
             'point': get_coordinates(form.geopoint.data),
             'email': form.email.data if form.email.data else current_user.email,
-            'radius': form.radius.data if form.radius.data else 2000,
+            'radius': radius,
             'photos': ','.join(photos),
             'category': form.category.data
         }).json()
@@ -275,16 +289,16 @@ def add_product():
         else:
             return render_template('product_create.html', title='Register',
                                    form=form,
-                                   message=response['error'], current_user=current_user)
+                                   message=response['error'], current_user=current_user, args=None)
     print(form.errors)
-    return render_template('product_create.html', title='Register', form=form, current_user=current_user)
+    return render_template('product_create.html', title='Register', form=form, current_user=current_user, args=None)
 
 
 @app.route('/users/<int:user_id>')
 def user_profile(user_id):
     response = get(f'http://localhost:8080/api/users/{user_id}').json()
     if 'user' in response.keys():
-        return render_template('profile_user.html', title='Пользователь', parse=response['user'])
+        return render_template('profile_user.html', title='Пользователь', parse=response['user'], args=None)
 
 
 @app.route('/send_message/<user_id>', methods=['GET', 'POST'])
@@ -304,14 +318,14 @@ def send_message(user_id):
         flash('Сообщение отправлено!')
         return redirect(f'/users/{user_id}')
     return render_template('send_message.html', title='Send Message',
-                           form=form, user=user)
+                           form=form, user=user, args=None)
 
 
 @app.route('/products/<int:product_id>')
 def watch_product(product_id):
     response = get(f'http://localhost:8080/api/products/{product_id}').json()
     if 'product' in response.keys():
-        return render_template('product.html', title=response['name'], parse=response['user'])
+        return render_template('product.html', args=response['product'], get_address=get_address)
 
 
 @app.route('/messages')
@@ -343,7 +357,7 @@ def messages():
     else:
         query = messages.all()
     return render_template('messages.html', messages=query,
-                           next_url=next_url, prev_url=prev_url)
+                           next_url=next_url, prev_url=prev_url, args=None)
 
 
 if __name__ == '__main__':

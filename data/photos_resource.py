@@ -9,6 +9,8 @@ from io import BytesIO
 import base64
 from thunderargs import Arg
 
+from data.utils import success
+
 
 def id_check(photo_id):
     session = db_session.create_session()
@@ -34,11 +36,13 @@ class PhotosResource(Resource):
 
     def delete(self, photo_id):
         id_check(photo_id)
-        session = db_session.create_session()
-        photo = session.query(Photo).get(photo_id)
-        session.delete(photo)
-        session.commit()
-        return jsonify({'OK': 'Success'})
+        if photo_id != 1 and photo_id != 2:
+            session = db_session.create_session()
+            photo = session.query(Photo).get(photo_id)
+            session.delete(photo)
+            session.commit()
+            return success()
+        return jsonify({'error': 'Операция запрещена'})
 
 
 class PhotosListResource(Resource):

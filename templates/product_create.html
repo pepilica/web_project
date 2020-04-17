@@ -51,6 +51,8 @@
         {% endfor %}
     </p>
     <p>
+        {{ form.actual_address() }} {{ form.actual_address.label}}</p>
+    <p>
         {{ form.photos.label }}<br>
         {{ form.photos(class="form-control") }}<br>
         {% for error in form.photos.errors %}
@@ -69,9 +71,9 @@
     {% endfor %}
     </p>
     <p>
-        {{ form.mobile_telephone.label }}<br>
-        {{ form.mobile_telephone}}<br>
-        {% for error in form.mobile_telephone.errors %}
+        {{ form.phone.label }}<br>
+        {{ form.phone(id='phone')}}<br>
+        {% for error in form.phone.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>

@@ -54,3 +54,42 @@ def get_coordinates(address):
     if not toponym:
         return None
     return toponym[0]['GeoObject']['Point']['pos']
+
+
+def get_city(coordinates):
+    geocoder_params = {
+        "apikey": GEOCODER_APIKEY,
+        "geocode": ','.join(map(str, coordinates)),
+        "format": "json"
+    }
+    response_toponym = requests.get(GEOCODER_API_SERVER, params=geocoder_params)
+    if not response_toponym:
+        return None
+    json_response = response_toponym.json()
+    toponym = json_response["response"]["GeoObjectCollection"]["featureMember"]
+    if not toponym:
+        return None
+    tmp = ''
+    for i in toponym[0]['GeoObject']['metaDataProperty']['GeocoderMetaData']['Address']['Components']:
+        if i['kind'] == 'locality':
+            return i['name']
+        if i['kind'] == 'area':
+            tmp = i['name']
+    return tmp
+
+
+def get_address(coords):
+    geocoder_params = {
+        "apikey": GEOCODER_APIKEY,
+        "geocode": ','.join(map(str, coords)),
+        "format": "json"
+    }
+    response_toponym = requests.get(GEOCODER_API_SERVER, params=geocoder_params)
+    if not response_toponym:
+        return None
+    json_response = response_toponym.json()
+    toponym = json_response["response"]["GeoObjectCollection"]["featureMember"]
+    if not toponym:
+        return None
+    print(toponym[0]['GeoObject']['metaDataProperty']['GeocoderMetaData']['Address']['formatted'])
+    return toponym[0]['GeoObject']['metaDataProperty']['GeocoderMetaData']['Address']['formatted']

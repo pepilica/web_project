@@ -27,7 +27,7 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     products = orm.relation("Product", back_populates='owner')
     messages_sent = orm.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy='dynamic')
     messages_received = orm.relationship('Message', foreign_keys='Message.recipient_id',
-                                     backref='recipient', lazy='dynamic')
+                                         backref='recipient', lazy='dynamic')
     last_message_read_time = sqlalchemy.Column(sqlalchemy.DateTime)
 
     def set_password(self, password):

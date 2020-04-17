@@ -2,11 +2,6 @@
 
 {% block main %}
 <h1 align="center">Регистрация</h1>
-<script>
-    $(function(){
-        $("#phone").mask("8(999) 999-9999");
-    });
-    </script>
 <form action="" method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {{ form.csrf_token }}
@@ -55,10 +50,10 @@
             </p>
         {% endfor %}
     </p>
-    <p id='phone'>
-        {{ form.mobile_telephone.label }}<br>
-        {{ form.mobile_telephone(class="form-control") }}<br>
-        {% for error in form.mobile_telephone.errors %}
+    <p>
+        {{ form.phone.label }}<br>
+        {{ form.phone(class="form-control", id='phone') }}<br>
+        {% for error in form.phone.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
             </p>
@@ -94,4 +89,5 @@
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>
+
 {% endblock %}

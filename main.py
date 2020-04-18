@@ -362,4 +362,4 @@ def messages():
 
 if __name__ == '__main__':
     db_session.global_init(os.path.join('db', 'shop.sqlite'))
-    app.run(port=8080, host='127.0.0.1')
+    app.run(port=8080, host='localhost')

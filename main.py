@@ -134,7 +134,7 @@ def register():
                 return render_template('register.html', title='Register',
                                        form=form,
                                        message='Неверный формат файла', current_user=current_user, args=None)
-        response = post(f'https://0.0.0.0:{port}/api/users', json={
+        response = post(f'http://0.0.0.0:{port}/api/users', json={
             'name': form.name.data,
             'surname': form.surname.data,
             'hometown': form.hometown.data,
@@ -161,7 +161,7 @@ def login():
         return redirect('/')
     form = LoginForm()
     if form.validate_on_submit():
-        response = put(f'https://0.0.0.0:{port}/api/users', json={
+        response = put(f'http://0.0.0.0:{port}/api/users', json={
             'email': form.email.data,
             'password': form.password.data
         }).json()

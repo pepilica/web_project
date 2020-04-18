@@ -122,7 +122,7 @@ def register():
                                            message='Фотография не подходит по размеру', current_user=current_user,
                                            args=None)
                 photograph.save(photo, format='PNG')
-                response_photo = post(f'https://0.0.0.0:{port}/api/photos', json={
+                response_photo = post(f'http://0.0.0.0:{port}/api/photos', json={
                     'photo': base64.b64encode(photo.getvalue()).decode()
                 }).json()
                 photo_output = response_photo['photo_id']
@@ -217,7 +217,7 @@ def products_main():
             category = session.query(Category).filter(Category.identifier == form.category.data).first()
             if category:
                 json_file['category'] = category.id
-    response = get(f'https://0.0.0.0:{port}/api/products', json=json_file).json()
+    response = get(f'http://0.0.0.0:{port}/api/products', json=json_file).json()
     if 'product' in response.keys():
         return render_template('products.html', products=response['product'], next_url=response['next_url'],
                                prev_url=response['prev_url'], session=db_session.create_session(),
@@ -249,7 +249,7 @@ def add_product():
                                                message='Фотография не подходит по размеру', current_user=current_user,
                                                args=None)
                     photograph.save(photo, format='PNG')
-                    response_photo = post(f'https://0.0.0.0:{port}/api/photos', json={
+                    response_photo = post(f'http://0.0.0.0:{port}/api/photos', json={
                         'photo': base64.b64encode(photo.getvalue()).decode()
                     }).json()
                     if 'success' not in response_photo.keys():
@@ -270,7 +270,7 @@ def add_product():
         else:
             radius = 500
         print(get_coordinates(form.geopoint.data))
-        response = post(f'https://0.0.0.0:{port}/api/products', json={
+        response = post(f'http://0.0.0.0:{port}/api/products', json={
             'user_id': current_user.id,
             'name': form.name.data,
             'description': form.description.data if form.description.data else '',
@@ -296,7 +296,7 @@ def add_product():
 
 @app.route('/users/<int:user_id>')
 def user_profile(user_id):
-    response = get(f'https://0.0.0.0:{port}/api/users/{user_id}').json()
+    response = get(f'http://0.0.0.0:{port}/api/users/{user_id}').json()
     if 'user' in response.keys():
         return render_template('profile_user.html', title='Пользователь', parse=response['user'], args=None)
 
@@ -323,7 +323,7 @@ def send_message(user_id):
 
 @app.route('/products/<int:product_id>')
 def watch_product(product_id):
-    response = get(f'https://0.0.0.0:{port}/api/products/{product_id}').json()
+    response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     if 'product' in response.keys():
         return render_template('product.html', args=response['product'], get_address=get_address)
 

@@ -74,7 +74,7 @@
                 {% else %}
                 <span class="card-notify-badge">Нет категории</span>
                 {% endif %}
-                <img class="img-fluid" src="/api/photos/{{products[i].photos.split(',')[0]}}" />
+                <img class="img-fluid" src="/api/photos/{{products[i + 2].photos.split(',')[0]}}" />
             </div>
             <div class="card-image-overlay m-auto">
                 <span class="card-detail-badge">{{get_city((products[i + 2]['point_longitude'], products[i + 2]['point_latitude']))}}</span>

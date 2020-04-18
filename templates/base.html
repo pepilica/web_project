@@ -189,9 +189,10 @@ function init() {
               <a class='dropdown-item' href="/logout">Выйти</a>
             </div>
           </li>
+		  <li class='nav-item'><a class="btn btn-success " href="/products/add">Разместить объявление</a></li>
           {% else %}
-        	<li class='dropdown-item'><a class="btn btn-primary " href="/register">Зарегистрироваться</a></li>
-        	<li class='dropdown-item'><a class="btn btn-success" href="/login">Войти</a></li>
+        	<li class='nav-item'><a class="btn btn-primary " href="/register">Зарегистрироваться</a></li>
+        	<li class='nav-item'><a class="btn btn-success" href="/login">Войти</a></li>
 		{% endif %}
         </ul>
       </div>

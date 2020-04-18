@@ -15,7 +15,6 @@ from wtforms import StringField, PasswordField, SubmitField, BooleanField, FileF
 from wtforms.fields.html5 import EmailField
 from wtforms.validators import DataRequired, Length, NumberRange, Optional
 from data.categories import Category
-from data.constants import POSTS_PER_PAGE
 from data import db_session
 from data.messages import Message
 from data.photos_resource import PhotosListResource, PhotosResource

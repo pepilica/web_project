@@ -1,18 +1,11 @@
 from flask import jsonify, request, url_for
-from flask.views import MethodView
-from flask_login import current_user
-from requests import get
-from sqlalchemy import or_
-
 from data.categories import Category
-from data.distance import lonlat_distance
 from flask_restful import reqparse, Api, Resource, abort
 from data.products import Product
 from data import db_session
 from data.users import User
 from data.utils import get_coordinates, success, blank_query, wrong_query
 from datetime import datetime
-from math import trunc
 
 CREATE_ARR = ['name', 'user_id', 'description', 'cost', 'photos', 'point',
               'radius', 'email', 'number', 'category']

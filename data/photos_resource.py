@@ -1,13 +1,9 @@
 from flask import jsonify, request, send_file
-from flask.views import MethodView
 from flask_restful import reqparse, Api, Resource, abort
-from PIL import Image
 from data.photos import Photo
-from data.users import User
 from data import db_session
 from io import BytesIO
 import base64
-from thunderargs import Arg
 
 from data.utils import success
 

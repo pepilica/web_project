@@ -1,5 +1,4 @@
 from flask import jsonify, request
-from flask.views import MethodView
 from flask_restful import reqparse, Api, Resource, abort
 from data.users import User
 from data import db_session

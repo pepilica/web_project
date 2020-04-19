@@ -4,7 +4,16 @@ from flask import jsonify
 from flask_restful import abort
 from data import db_session
 from data.constants import GEOCODER_APIKEY, GEOCODER_API_SERVER
+from data.products import Product
 from data.users import User
+
+
+def id_check_product(product_id):
+    session = db_session.create_session()
+    product = session.query(Product).filter(Product.id == product_id).first()
+    session.commit()
+    if not product:
+        abort(404)
 
 
 def success():
@@ -59,7 +68,7 @@ def get_coordinates(address):
 def get_city(coordinates):
     geocoder_params = {
         "apikey": GEOCODER_APIKEY,
-        "geocode": ','.join(map(str, coordinates)),
+        "geocode": ','.join(map(str, coordinates)) if type(coordinates) != str else coordinates,
         "format": "json"
     }
     response_toponym = requests.get(GEOCODER_API_SERVER, params=geocoder_params)

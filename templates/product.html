@@ -31,7 +31,7 @@
 							</div>
 					</div>
 					<div class="details col-md-6">
-						<h3 class="product-title">{{args['name']}}</h3>
+						<h3 class="product-title">{{args['name']}}</h3>{% if not args['is_active'] %}<h3 class='text-warning'>(куплено либо скрыто)</h3> {% endif %}
 						<p class="product-description">{{args['description']}}</p>
 						<h4 class="price">Цена: <span>{{args['cost']}} ₽</span></h4>
 						{% if args['radius'] > 0 %}
@@ -40,8 +40,20 @@
 						<div id="mapWithoutRadius" name="mapWithoutRadius" style="width: 300px; height: 300px"></div>
 						{% endif %}
 						<div class="action">
-							<button class="add-to-cart btn btn-default" type="button">add to cart</button>
-							<button class="like btn btn-default" type="button"><span class="fa fa-heart"></span></button>
+							{% if current_user.is_authenticated %}
+								{% if current_user.id != args['user_id'] %}
+									<a class="btn btn-primary" href="/products/{{args['id']}}/buy">Написать продавцу</a>
+								{% else %}
+								<a class="btn btn-info" href="/products/{{args['id']}}/edit">Изменить</a>
+								{% if args['is_active'] %}
+								<a class="btn btn-danger" href="/products/{{args['id']}}/change_state">Скрыть объявление</a>
+								{% else %}
+								<a class="btn btn-success" href="/products/{{args['id']}}/change_state">Показать объявление</a>
+								{% endif %}
+								{% endif %}
+							{% else %}
+								<button class="btn btn-muted" disabled="disabled">Войдите, чтобы написать продавцу</button>
+							{% endif %}
 						</div>
 					</div>
 				</div>

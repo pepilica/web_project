@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block main %}
+<div class='container-fluid'>
+	<div class='wrapper row'>
+		<div class='preview col-md-8'>
+			<h3>Это площадка для <strong>покупки и размещения</strong> товаров. <br>
+			Зарегистрируйтесь или войдите, чтобы совершать покупки или размещать объявления.<br>
+			Надеюсь, что это будет работать.
+		</h3>
+		</div>
+		<div class='preview col-md-4'>
+			<ul>
+				{% if current_user.is_authenticated %}
+  				<li type=' '><a href="/products/add" class="btn btn-primary">Разместить объявление</a></li>
+				{% endif %}
+				<li type=' '><a href="/products" class="btn btn-outlne-warning">Смотреть объявления</a></li>
+			</ul>
+		</div>
+	</div>
+</div>
+{% endblock %}

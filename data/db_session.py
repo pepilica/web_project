@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from sqlalchemy.orm import Session
 import sqlalchemy.ext.declarative as dec
+import inspect
 
 SqlAlchemyBase = dec.declarative_base()
 
@@ -19,7 +20,7 @@ def global_init(db_file):
 
     conn_str = f'sqlite:///{db_file.strip()}?check_same_thread=False'
     print(f"Подключение к базе данных по адресу {conn_str}")
-    engine = sa.create_engine(conn_str)
+    engine = sa.create_engine(conn_str, echo=True)
     __factory = orm.sessionmaker(bind=engine)
     from . import __all_models
     SqlAlchemyBase.metadata.create_all(engine)
@@ -27,4 +28,6 @@ def global_init(db_file):
 
 def create_session() -> Session:
     global __factory
+    print('Открыто')
+    print(inspect.stack()[1][3])
     return __factory()

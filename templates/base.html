@@ -13,7 +13,84 @@
     <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.min.css" rel="stylesheet">
     <script type='text/javascript'>$SCRIPT_ROOT = {{ request.script_root|tojson|safe }};</script>
     <script src="{{url_for('static', filename='js/jquery.maskedinput.min.js')}}"></script>
+    {{ moment.include_moment() }}
+    {{ moment.lang('ru') }}
     {% if args %}
+        <script type="text/javascript">
+ymaps.ready(init);
+
+
+function init() {
+    var myPlacemark,
+        myMap = new ymaps.Map('mapEdit', {
+            center: [{{ args['point_latitude'] }}, {{ args['point_longitude'] }}],
+            zoom: 9
+        }, {
+            searchControlProvider: 'yandex#search'
+        });
+        myPlacemark = initPlacemark([{{ args['point_latitude'] }}, {{ args['point_longitude'] }}]);
+        myMap.geoObjects.add(myPlacemark);
+    // Слушаем клик на карте.
+    myMap.events.add('click', function (e) {
+        var coords = e.get('coords');
+        current_coords = coords;
+        // Если метка уже создана – просто передвигаем ее.
+        if (myPlacemark) {
+            myPlacemark.geometry.setCoordinates(coords);
+        }
+        // Если нет – создаем.
+        else {
+            myPlacemark = createPlacemark(coords);
+            myMap.geoObjects.add(myPlacemark);
+            // Слушаем событие окончания перетаскивания на метке.
+            myPlacemark.events.add('dragend', function () {
+                getAddress(myPlacemark.geometry.getCoordinates());
+            });
+        }
+        getAddress(coords);
+    });
+
+    // Создание метки.
+    function createPlacemark(coords) {
+        return new ymaps.Placemark(coords, {
+            iconCaption: 'поиск...'
+        }, {
+            preset: 'islands#violetDotIconWithCaption',
+            draggable: true
+        });
+    }
+    function initPlacemark(coords) {
+        return new ymaps.Placemark(coords, {
+            iconCaption: 'Нынешний адрес'
+        }, {
+            preset: 'islands#violetDotIconWithCaption',
+            draggable: true
+        });
+    }
+
+    // Определяем адрес по координатам (обратное геокодирование).
+    function getAddress(coords) {
+        myPlacemark.properties.set('iconCaption', 'поиск...');
+        ymaps.geocode(coords).then(function (res) {
+            var firstGeoObject = res.geoObjects.get(0);
+            current_address = firstGeoObject;
+            myPlacemark.properties
+                .set({
+                    // Формируем строку с данными об объекте.
+                    iconCaption: [
+                        // Название населенного пункта или вышестоящее административно-территориальное образование.
+                        firstGeoObject.getLocalities().length ? firstGeoObject.getLocalities() : firstGeoObject.getAdministrativeAreas(),
+                        // Получаем путь до топонима, если метод вернул null, запрашиваем наименование здания.
+                        firstGeoObject.getThoroughfare() || firstGeoObject.getPremise()
+                    ].filter(Boolean).join(', '),
+                    // В качестве контента балуна задаем строку с адресом объекта.
+                    balloonContent: firstGeoObject.getAddressLine()
+                });
+            $('#geopoint').val(firstGeoObject.getAddressLine())    
+        });
+    }
+}
+</script>
     <script type='text/javascript'>
 	ymaps.ready(init);
 
@@ -91,7 +168,6 @@ function init() {
 </script>
 {% endif %}
     <script type="text/javascript">
-}
 //Код jQuery, установливающий маску для ввода телефона элементу input
 //1. После загрузки страницы,  когда все элементы будут доступны выполнить...
 $(function(){
@@ -164,6 +240,15 @@ function init() {
     }
 }
 </script>
+<script type='text/javascript'>
+    ymaps.ready(init);
+
+function init() {
+    // Создаем выпадающую панель с поисковыми подсказками и прикрепляем ее к HTML-элементу по его id.
+    var suggestView1 = new ymaps.SuggestView('hometown');
+    var suggestView2 = new ymaps.SuggestView('address');
+}
+</script>
 </head>
 <body>
 	<header>
@@ -189,10 +274,10 @@ function init() {
               <a class='dropdown-item' href="/logout">Выйти</a>
             </div>
           </li>
-		  <li class='nav-item'><a class="btn btn-success " href="/products/add">Разместить объявление</a></li>
+		  <a class="btn btn-outline-success my-2" type="button" href="/products/add">Разместить объявление</a>
           {% else %}
-        	<li class='nav-item'><a class="btn btn-primary " href="/register">Зарегистрироваться</a></li>
-        	<li class='nav-item'><a class="btn btn-success" href="/login">Войти</a></li>
+        	<li class='nav-item my-2'><a class="btn btn-outline-primary " href="/register">Зарегистрироваться</a></li>
+        	<a class="btn btn-outline-success my-2" href="/login">Войти</a></li>
 		{% endif %}
         </ul>
       </div>

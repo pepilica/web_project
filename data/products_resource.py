@@ -54,25 +54,27 @@ class ProductsResource(Resource):
             session = db_session.create_session()
             args = request.json
             product = session.query(Product).get(product_id)
+            product.user_id = args['user_id']
             product.name = args['name']
             product.description = args['description']
             product.cost = args['cost']
             product.is_active = args['is_active']
-            product.photos = args['photos']
+#            product.photos = str(args['photos']),
+#            product.category = session.query(Category).filter(Category.identifier == args['category']).first().id if session.query(Category).filter(Category.identifier == args['category']).first() else None,
             product.radius = args['radius']
             product.contact_email = args['email']
             product.contact_number = args['number']
             product.longitude, product.latitude = map(float, args['point'].split(' '))
             session.commit()
             return success()
-        except Exception:
-            return wrong_query()
+        except Exception as e:
+            return jsonify({'error': e.__repr__()})
 
 
 class ProductsListResource(Resource):
     def get(self):
         session = db_session.create_session()
-        products = session.query(Product).filter(Product.is_active == True)
+        products = session.query(Product)
         next_url, prev_url = None, None
         if request.json:
             args = request.json
@@ -87,6 +89,9 @@ class ProductsListResource(Resource):
                     products = products.filter(Product.name.like(f'%{args["name"]}%'))
                 elif query == 'category':
                     products = products.filter(Product.category == args['category'])
+                elif query == 'user':
+                    products = products.filter(Product.user_id == args['user_id'])
+            products = products.filter(Product.is_active == args.get('is_active', True))
             if 'sort_by' in args.keys():
                 if args['sort_by'] == 'date':
                     products = products.order_by(Product.date.desc())
@@ -102,11 +107,13 @@ class ProductsListResource(Resource):
                     products = products.items
                 else:
                     return wrong_query()
+        else:
+            products = products.filter(Product.is_active == True)
         products = products.all()
         return jsonify({
             'product': [item.to_dict(only=('id', 'name', 'user_id', 'description', 'cost', 'is_active', 'photos',
                                            'point_longitude', 'point_latitude', 'radius', 'contact_email',
-                                           'contact_number', 'category')) for item in products],
+                                           'contact_number', 'category', 'date')) for item in products],
             'next_url': next_url,
             'prev_url': prev_url
         })
@@ -122,12 +129,12 @@ class ProductsListResource(Resource):
             return wrong_query()
         point_longitude, point_latitude = map(float, args['point'].split(' '))
         product = Product(
-            name=args['name'],
+            name=str(args['name']),
             user_id=args['user_id'],
             description=args['description'],
             cost=args['cost'],
             is_active=True,
-            photos=args['photos'],
+            photos=str(args['photos']),
             point_longitude=point_longitude,
             point_latitude=point_latitude,
             radius=args['radius'],

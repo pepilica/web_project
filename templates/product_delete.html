@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block main %}
+<div class='conainer'>
+	<h5 class='text-danger'><strong>Это действие необратимо.</strong></h5><br><h5 class='text'>Вы хотите удалить объявление {{name}}?</h5>
+	<form action="" method="post">
+	{{ form.hidden_tag() }}
+    {{ form.csrf_token }}
+    <p>{{ form.confirm() }} {{ form.confirm.label}}</p>
+    <p>{{ form.submit(type="submit", class="btn btn-danger") }}</p>
+    {{message}}
+	</form>
+</div>
+{% endblock %}

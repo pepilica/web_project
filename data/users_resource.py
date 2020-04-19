@@ -1,3 +1,5 @@
+import sys
+
 from flask import jsonify, request
 from flask_restful import reqparse, Api, Resource, abort
 from data.users import User
@@ -21,8 +23,8 @@ class UsersResource(Resource):
         session = db_session.create_session()
         user = session.query(User).get(user_id)
         return jsonify({
-            'user': user.to_dict(only=('name', 'surname', 'hometown', 'mobile_telephone', 'deals_number', 'rating',
-                                       'photo_id', 'address', 'email'))
+            'user': user.to_dict(only=('id', 'name', 'surname', 'hometown', 'mobile_telephone', 'deals_number',
+                                       'rating', 'photo_id', 'address', 'email'))
         })
 
     def delete(self, user_id):
@@ -38,10 +40,11 @@ class UsersResource(Resource):
             id_check(user_id)
             if not request.json:
                 return blank_query()
-            elif not all(key in request.json for key in REGISTER_ARR):
+            elif not all(key in request.json for key in ['name', 'surname', 'hometown', 'mobile_telephone',
+                                                         'address', 'email', 'photo_id']):
                 return wrong_query()
             session = db_session.create_session()
-            user = session.query(User).get(User.id).first()
+            user = session.query(User).get(user_id)
             args = request.json
             user.name = args['name']
             user.surname = args['surname']
@@ -49,12 +52,12 @@ class UsersResource(Resource):
             user.email = args['email']
             user.address = args['address']
             user.mobile_telephone = args['mobile_telephone']
-            user.set_password(args['password'])
             user.photo_id = args['photo_id']
+            session.merge(user)
             session.commit()
             return success()
-        except Exception:
-            return wrong_query()
+        except Exception as e:
+            return jsonify({'error': e.__repr__()})
 
 
 class UsersListResource(Resource):

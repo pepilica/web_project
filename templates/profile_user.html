@@ -1,49 +1,86 @@
 {% extends "base.html" %}
 {% block main %}
-<div class="container">
-    <div class="span3 well">
-        <center>
-        <a href="#aboutModal" data-toggle="modal" data-target="#myModal"><img src="http://127.0.0.1:8080/api/photos/{{parse['photo_id']}}" name="aboutme" width="140" height="140" class="img-circle"></a>
-        <h3>{{parse['name']}} {{parse['surname']}}</h3>
-        <em>click my face for more</em>
-		</center>
-    </div>
-    <!-- Modal -->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-                    <h4 class="modal-title" id="myModalLabel">More About {{parse['name']}}</h4>
+<div class="container emp-profile">
+            <form method="post">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="profile-img">
+                            <img src="/api/photos/{{parse['photo_id']}}" width="400" height="400" alt=""/>
+                        </div>
                     </div>
-                <div class="modal-body">
-                    <center>
-                    <img src="http://127.0.0.1:8080/api/photos/{{parse['photo_id']}}" name="aboutme" width="140" height="140" border="0" class="img-circle"></a>
-                    <h3 class="media-heading">{{parse['name']}} {{parse['surname']}} <small>
-                    </center>
-                    <hr>
-                    <center>
-                    <p class="text-left"><strong>Email: </strong><br>
-                        {{parse['email']}}</p>
-                    <br>
-                    <p class="text-left"><strong>Mobile telephone: </strong><br>
-                        {{parse['mobile_telephone']}}</p>
-                    <br>
-                    <p class="text-left"><strong>City: </strong><br>
-                        {{parse['hometown']}}</p>
-                    <br>
-                    <p class="text-left"><strong>Address: </strong><br>
-                        {{parse['address']}}</p>
-                    <br>
-                    </center>
+                    <div class="col-md-6">
+                        <div class="profile-head">
+                                    <h5>
+                                        {{parse['name']}} {{parse['surname']}}
+                                    </h5>
+                                    <h6>
+                                        {{parse['hometown']}}
+                                    </h6>
+                                    {% if current_user.id != parse['id'] %}
+                                    <h6>
+                                        Контактный телефон: {% if current_user.is_authenticated %}{{parse['mobile_telephone']}} {% else %} Войдите, чтобы увидеть {% endif %}
+                                    </h6>
+                                    <h6>
+                                        Контактный элетронный адрес: {% if current_user.is_authenticated %}{{parse['email']}}{% else %} Войдите, чтобы увидеть {% endif %}
+                                    </h6>
+                                    {% endif %}
+                            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Объявления</a>
+                                </li>
+                                {% if current_user.id == parse['id'] %}
+                                <li class="nav-item">
+                                    <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Мои скрытые объявления</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                    	{% if current_user.id == parse['id'] %}
+                    	<a href="/users/{{parse['id']}}/edit" class="btn btn-light" name="btnAddMore">Редактировать профиль</a>
+                    	{% endif %}
+                    </div>
                 </div>
-                <div class="modal-footer">
-                    <center>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">I've heard enough about {{parse['name']}}</button>
-                    </center>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="profile-work">
+                        	{% if current_user.id != parse['id'] and current_user.is_authenticated %}
+                            <a class="btn btn-primary" href='/send_message/{{parse["id"]}}'>Написать сообщение</a><br/>
+                        	{% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="tab-content profile-tab" id="myTabContent">
+                            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                            	{% for item in active %}
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <a href="/products/{{item['id']}}">{{item['name']}}</a>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p>{{ moment(item['date'], local=True).fromNow() }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                            </div>
+                            {% if current_user.id == parse['id'] %}
+                            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                            	{% for item in finished %}
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <a href="/products/{{item['id']}}">{{item['name']}}</a>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p>{{ moment(item['date'], local=True).fromNow() }}</p>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </form>           
         </div>
-    </div>
-</div>
 {% endblock %}

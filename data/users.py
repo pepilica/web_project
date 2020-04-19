@@ -1,7 +1,9 @@
+import json
 from datetime import datetime
 import sqlalchemy
 from sqlalchemy_serializer import SerializerMixin
 from data.messages import Message
+from data.notifications import Notification
 from .db_session import SqlAlchemyBase
 from sqlalchemy import orm
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -24,7 +26,9 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     deals_number = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     rating = sqlalchemy.Column(sqlalchemy.Float, nullable=True)
     photo_id = sqlalchemy.Column(sqlalchemy.Integer, sqlalchemy.ForeignKey('photos.id'), nullable=True)
-    products = orm.relation("Product", back_populates='owner')
+    notifications = orm.relation('Notification', backref='user',
+                                 lazy='dynamic')
+    products = orm.relation("Product", back_populates='owner', lazy='dynamic')
     messages_sent = orm.relationship('Message', foreign_keys='Message.sender_id', backref='author', lazy='dynamic')
     messages_received = orm.relationship('Message', foreign_keys='Message.recipient_id',
                                          backref='recipient', lazy='dynamic')
@@ -39,8 +43,18 @@ class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     def new_messages(self):
         session = db_session.create_session()
         last_time = self.last_message_read_time or datetime(1900, 1, 1)
-        return session.query(Message).filter_by(recipient=self).filter(
+        x = session.query(Message).filter_by(recipient=self).filter(
             Message.timestamp > last_time).count()
+        session.commit()
+        return x
+
+    def add_notification(self, name, data):
+        session = db_session.create_session()
+        self.notifications.filter_by(name=name).delete()
+        n = Notification(name=name, payload_json=json.dumps(data), user=self)
+        session.merge(n)
+        session.commit()
+        return n
 
     def __repr__(self):
         return f'<Пользователь - {self.name} {self.surname}>'

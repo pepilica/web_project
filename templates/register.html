@@ -61,7 +61,7 @@
     </p>
     <p>
         {{ form.hometown.label }}<br>
-        {{ form.hometown(class="form-control") }}<br>
+        {{ form.hometown(class="form-control", id='hometown') }}<br>
         {% for error in form.hometown.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
@@ -70,7 +70,7 @@
     </p>
     <p>
         {{ form.address.label }}<br>
-        {{ form.address(class="form-control") }}<br>
+        {{ form.address(class="form-control", id='address') }}<br>
         {% for error in form.address.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}
@@ -79,7 +79,7 @@
     </p>
     <p>
         {{ form.photo.label }}<br>
-        {{ form.photo(class="form-control") }}<br>
+        {{ form.photo(class="form-control", accept="image/png, image/jpeg, image/gif") }}<br>
         {% for error in form.photo.errors %}
             <p class="alert alert-danger" role="alert">
                 {{ error }}

@@ -4,8 +4,8 @@
     {% for post in messages %}
         <table>
         <tr valign="top">
-            <td><img src="http://localhost:8080/api/photos/{{ post.author.photo_id }}"></td>
-            <td><a href="http://localhost:8080/users/{{ post.author.id }}">{{ post.author.name }}</a> пишет:<br>{{ post.body }}</td>
+            <td><img src="/api/photos/{{ post.author.photo_id }}" width="300" height="300"></td>
+            <td><a href="/users/{{ post.author.id }}">{{ post.author.name }} {{post.author.surname}}</a> пишет:<br>{{ post.body }}</td>
         </tr>
     </table>
     {% endfor %}

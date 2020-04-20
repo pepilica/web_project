@@ -632,4 +632,4 @@ def notifications():
 if __name__ == '__main__':
     #  Запуск приложения
     db_session.global_init(os.path.join('db', 'shop.sqlite'))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port)

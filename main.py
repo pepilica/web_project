@@ -505,7 +505,6 @@ def messages():
 @login_required
 def delete_product(product_id):
     """Удаление объявления"""
-    id_check_product(product_id)
     form = ConfirmForm()
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     args = response['product']
@@ -527,7 +526,6 @@ def delete_product(product_id):
 @login_required
 def edit_product(product_id):
     """Изменение объявления"""
-    id_check_product(product_id)
     form = ProductForm()
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     args = response['product']

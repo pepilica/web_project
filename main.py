@@ -418,7 +418,6 @@ def send_message(user_id):
 @app.route('/products/<int:product_id>')
 def watch_product(product_id):
     """Страница объявления"""
-    id_check_product(product_id)
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     if 'product' in response.keys():
         return render_template('product.html', args=response['product'], get_address=get_address,

@@ -11,11 +11,11 @@
 							  	{% for photo in photos %}
 							  	{% if loop.first %}
 							    <div class="carousel-item active">
-							      <img class="d-block w-100" src="/api/photos/{{photo}}" alt="slide" width='800' height="600">
+							      <img class="d-block w-100 img-responsive" src="/api/photos/{{photo}}" alt="slide" style='width:100%;'>
 							    </div>
 							    {% else %}
 							    <div class="carousel-item">
-							      <img class="d-block w-100" src="/api/photos/{{photo}}" alt="slide" width='800' height="600">
+							      <img class="d-block w-100 img-responsive" src="/api/photos/{{photo}}" alt="slide" style='width:100%;'>
 							    </div>
 							    {% endif %}
 							 	{% endfor %}
@@ -33,6 +33,7 @@
 					<div class="details col-md-6">
 						<h3 class="product-title">{{args['name']}}</h3>{% if not args['is_active'] %}<h3 class='text-warning'>(куплено либо скрыто)</h3> {% endif %}
 						<p class="product-description">{{args['description']}}</p>
+						<a href="/users/{{args['user_id']}}">Профиль продавца</a>
 						<h4 class="price">Цена: <span>{{args['cost']}} ₽</span></h4>
 						{% if args['radius'] > 0 %}
 						<div id="mapWithRadius" name="mapWithRadius" style="width: 300px; height: 300px"></div>
@@ -42,7 +43,7 @@
 						<div class="action">
 							{% if current_user.is_authenticated %}
 								{% if current_user.id != args['user_id'] %}
-									<a class="btn btn-primary" href="/products/{{args['id']}}/buy">Написать продавцу</a>
+									<a target="_blank" rel="noopener noreferrer" class="btn btn-primary" href="/products/{{args['id']}}/buy">Написать продавцу</a>
 								{% else %}
 								<a class="btn btn-info" href="/products/{{args['id']}}/edit">Изменить</a>
 								{% if args['is_active'] %}

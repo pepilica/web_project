@@ -25,12 +25,12 @@
                     <h5>{{products[i]['name']}}</h5>
                 </div>
                 <div class="ad-title m-auto">
-                    <h5>{{user.name}} {{user.surname}}</h5>
+                    <a target="_blank" rel="noopener noreferrer" href="/users/{{user.id}}">{{user.name}} {{user.surname}}</a>
                 </div>
                 <div class="ad-title m-auto">
                     <h5>{{int(products[i]['cost'])}} рублей</h5>
                 </div>
-                <a class="ad-btn" href="/products/{{products[i]['id']}}">Смотреть</a>
+                <a target="_blank" rel="noopener noreferrer" class="ad-btn" href="/products/{{products[i]['id']}}">Смотреть</a>
             </div>
         </div>
     </div>
@@ -54,12 +54,12 @@
                     <h5>{{products[i + 1]['name']}}</h5>
                 </div>
                 <div class="ad-title m-auto">
-                    <h5>{{user.name}} {{user.surname}}</h5>
+                    <a target="_blank" rel="noopener noreferrer" href="/users/{{user.id}}">{{user.name}} {{user.surname}}</a>
                 </div>
                 <div class="ad-title m-auto">
                     <h5>{{int(products[i + 1]['cost'])}} рублей</h5>
                 </div>
-                <a class="ad-btn" href="/products/{{products[i + 1]['id']}}">Смотреть</a>
+                <a target="_blank" rel="noopener noreferrer" class="ad-btn" href="/products/{{products[i + 1]['id']}}">Смотреть</a>
             </div>
         </div>
     </div>
@@ -84,12 +84,12 @@
                     <h5>{{products[i + 2]['name']}}</h5>
                 </div>
                 <div class="ad-title m-auto">
-                    <h5>{{user.name}} {{user.surname}}</h5>
+                    <a href="/users/{{user.id}}" target="_blank" rel="noopener noreferrer">{{user.name}} {{user.surname}}</a>
                 </div>
                 <div class="ad-title m-auto">
                     <h5>{{int(products[i + 2]['cost'])}} рублей</h5>
                 </div>
-                <a class="ad-btn" href="/products/{{products[i + 2]['id']}}">Смотреть</a>
+                <a target="_blank" rel="noopener noreferrer" class="ad-btn" href="/products/{{products[i + 2]['id']}}">Смотреть</a>
             </div>
         </div>
     </div>

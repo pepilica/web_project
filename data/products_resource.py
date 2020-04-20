@@ -63,16 +63,19 @@ class ProductsResource(Resource):
             product.user_id = args['user_id']
             product.name = args['name']
             product.description = args['description']
+            product.photos = str(args['photos'])
             product.cost = args['cost']
             product.is_active = args['is_active']
             product.radius = args['radius']
+            product.category = args['category']
             product.contact_email = args['email']
             product.contact_number = args['number']
             product.longitude, product.latitude = map(float, args['point'].split(' '))
+            session.merge(product)
             session.commit()
             return success()
         except Exception as e:
-            return jsonify({'error': e.__repr__()})
+            return jsonify({'error': args['photos'] + ' ' + args['category']})
 
 
 class ProductsListResource(Resource):

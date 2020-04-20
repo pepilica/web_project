@@ -92,6 +92,9 @@ class EditForm(FlaskForm):
     name = StringField('Имя', validators=[DataRequired()])
     hometown = StringField('Город проживания', validators=[DataRequired()])
     address = StringField('Адрес', validators=[DataRequired()])
+    delete_photo = BooleanField("Удалить фото профиля",
+                                validators=[Optional()])
+    change_photo = FileField("Изменить фото профиля(не менее 200x200, не более 2000x2000). Форматы: jpg, png.", validators=[Optional()])
     phone = StringField('Мобильный телефон', validators=[DataRequired()])
     submit = SubmitField('Изменить')
 
@@ -101,6 +104,23 @@ class ProductForm(FlaskForm):
     description = TextAreaField('Описание (не больше 2000 символов)', validators=[Length(max=2000)])
     cost = IntegerField('Стоимость (в рублях)', validators=[DataRequired()])
     photos = MultipleFileField('Выберите фотографии (не более 10)', validators=[Length(max=10), Optional()])
+    radius = IntegerField('Радиус поиска (в метрах, не более 500 км)', validators=[NumberRange(max=5 * 10 ** 5),
+                                                                                   Optional()])
+    actual_address = BooleanField('Показывать фактический адрес', validators=[Optional()])
+    geopoint = StringField('Адрес',  validators=[DataRequired()])
+    category = RadioField('Категория', choices=[(CATEGORIES[i], i) for i in CATEGORIES.keys()] +
+                                               [('no', 'Без категории')], validators=[Optional()])
+    phone = StringField('Контактный телефон', validators=[Optional()])
+    email = EmailField('Контактный электронный адрес', validators=[Optional()])
+    submit = SubmitField('Добавить!')
+
+
+class ProductEditForm(FlaskForm):
+    name = StringField('Название', validators=[DataRequired()])
+    description = TextAreaField('Описание (не больше 2000 символов)', validators=[Length(max=2000)])
+    cost = IntegerField('Стоимость (в рублях)', validators=[DataRequired()])
+    photos = MultipleFileField('Выберите фотографии для изменения (не более 10)', validators=[Length(max=10),
+                                                                                              Optional()])
     radius = IntegerField('Радиус поиска (в метрах, не более 500 км)', validators=[NumberRange(max=5 * 10 ** 5),
                                                                                    Optional()])
     actual_address = BooleanField('Показывать фактический адрес', validators=[Optional()])
@@ -374,6 +394,36 @@ def edit_user(user_id):
         form.address.data = args['address']
         form.phone.data = args['mobile_telephone']
     if form.validate_on_submit():
+        if form.change_photo.data:
+            print(form.change_photo.data)
+            picture_upload = form.change_photo.data
+            if picture_upload.content_type in ('image/png', 'image/jpeg'):
+                photo = io.BytesIO(picture_upload.read())
+                photograph = Image.open(photo)
+                if not check_photo(photograph):
+                    return render_template('user_edit.html', title='Редактирование',
+                                           form=form,
+                                           message='Фотография не подходит по размеру', current_user=current_user,
+                                           args=None, photo_id=args['photo_id'])
+                photograph.save(photo, format='PNG')
+                response_photo = post(f'http://0.0.0.0:{port}/api/photos', json={
+                    'photo': base64.b64encode(photo.getvalue()).decode()
+                }).json()
+                if 'success' not in response_photo.keys():
+                    return render_template('user_edit.html', title='Редактирование',
+                                           form=form,
+                                           message=response_photo['error'], current_user=current_user, args=None,
+                                           photo_id=args['photo_id'])
+                photo_id = response_photo['photo_id']
+            else:
+                return render_template('user_edit.html', title='Редактирование',
+                                       form=form,
+                                       message='Неверный формат файла', current_user=current_user, args=None,
+                                       photo_id=args['photo_id'])
+        if form.delete_photo.data:
+            photo_id = '1'
+        if not form.delete_photo.data and not form.change_photo.data.filename:
+            photo_id = args['photo_id']
         response = put(f'http://0.0.0.0:{port}/api/users/{user_id}', json={
             'name': form.name.data,
             'surname': form.surname.data,
@@ -381,17 +431,19 @@ def edit_user(user_id):
             'mobile_telephone': form.phone.data,
             'address': form.address.data,
             'email': args['email'],
-            'photo_id': args['photo_id']
+            'photo_id': photo_id
         }).json()
         print(response)
         if 'success' in response.keys():
             flash('Изменения сохранены')
             return redirect(f'/users/{user_id}')
         else:
-            return render_template('user_edit.html', title='Регистрация',
+            return render_template('user_edit.html', title='Редактирование',
                                    form=form,
-                                   message=response['error'], current_user=current_user, args=None)
-    return render_template('user_edit.html', title='Регистрация', form=form, current_user=current_user, args=None)
+                                   message=response['error'], current_user=current_user, args=None,
+                                   photo_id=args['photo_id'])
+    return render_template('user_edit.html', title='Редактирование', form=form, current_user=current_user, args=None,
+                           photo_id=args['photo_id'])
 
 
 @app.route('/send_message/<user_id>', methods=['GET', 'POST'])
@@ -421,6 +473,7 @@ def watch_product(product_id):
     id_check_product(product_id)
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     if 'product' in response.keys():
+        print(response['product']['photos'])
         return render_template('product.html', args=response['product'], get_address=get_address,
                                title=response['product']['name'])
 
@@ -483,6 +536,10 @@ def messages():
     next_url, prev_url = None, None
     messages = user.messages_received.order_by(
         Message.timestamp.desc())
+    print('$$$', messages.all())
+    messages_sent = user.messages_sent.order_by(
+        Message.timestamp.desc())
+    print('$$$', messages_sent.all())
     if messages:
         page_cur = SqlalchemyOrmPage(messages, page=page, items_per_page=5)
         if page <= page_cur.item_count:
@@ -528,7 +585,7 @@ def delete_product(product_id):
 def edit_product(product_id):
     """Изменение объявления"""
     id_check_product(product_id)
-    form = ProductForm()
+    form = ProductEditForm()
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     args = response['product']
     if args['user_id'] != current_user.id:
@@ -547,6 +604,7 @@ def edit_product(product_id):
         form.actual_address.data = True if args['radius'] < 1 else False
         form.email.data = args['contact_email']
         form.phone.data = args['contact_number']
+        print(args['photos'])
     if form.validate_on_submit():
         photos = []
         pics = request.files.getlist(form.photos.name)
@@ -554,39 +612,45 @@ def edit_product(product_id):
             for picture_upload in pics:
                 print(picture_upload.filename)
                 if not picture_upload.filename:
-                    photos = ['2']
                     break
                 if picture_upload.content_type in ('image/png', 'image/jpeg'):
                     photo = io.BytesIO(picture_upload.read())
                     photograph = Image.open(photo)
                     if not check_photo(photograph):
+                        flash('Фотография не подходит по размеру')
                         return render_template('product_edit.html', title='Изменение',
-                                               form=form,
-                                               message='Фотография не подходит по размеру', current_user=current_user,
+                                               form=form, current_user=current_user,
                                                args=args, get_address=get_address, get_coordinates=get_coordinates)
                     photograph.save(photo, format='PNG')
                     response_photo = post(f'http://0.0.0.0:{port}/api/photos', json={
                         'photo': base64.b64encode(photo.getvalue()).decode()
                     }).json()
                     if 'success' not in response_photo.keys():
+                        flash(response_photo['error'])
                         return render_template('product_edit.html', title='Изменение',
-                                               form=form,
-                                               message=response_photo['error'], current_user=current_user,
+                                               form=form, current_user=current_user,
                                                args=args, get_address=get_address, get_coordinates=get_coordinates)
                     photos.append(str(response_photo['photo_id']))
+                    print(str(response_photo['photo_id']))
                 else:
+                    flash('Неверный формат файла')
                     return render_template('product_edit.html', title='Изменение',
-                                           form=form,
-                                           message='Неверный формат файла', current_user=current_user, args=args,
+                                           form=form, current_user=current_user, args=args,
                                            get_address=get_address, get_coordinates=get_coordinates)
-        else:
-            photos = ['2']
+        if not photos:
+            photos = args['photos'].split(',')
         if form.actual_address.data:
             radius = -1
         elif form.radius.data:
             radius = form.radius.data
         else:
             radius = 2000
+        session = db_session.create_session()
+        category = session.query(Category).filter(Category.identifier == form.category.data).first()
+        if not category:
+            category = ''
+        else:
+            category = category.id
         print(get_coordinates(form.geopoint.data))
         response = put(f'http://0.0.0.0:{port}/api/products/{product_id}', json={
             'user_id': current_user.id,
@@ -599,16 +663,16 @@ def edit_product(product_id):
             'email': form.email.data if form.email.data else current_user.email,
             'radius': radius,
             'photos': ','.join(photos),
-            'category': form.category.data
+            'category': category
         }).json()
         print(response)
         if 'success' in response.keys():
             flash('Товар успешно изменен')
             return redirect(f'/products/{product_id}')
         else:
+            flash(response['error'])
             return render_template('product_edit.html', title='Изменение',
-                                   form=form,
-                                   message=response['error'], current_user=current_user, args=args,
+                                   form=form, current_user=current_user, args=args,
                                    get_address=get_address, get_coordinates=get_coordinates)
     print(form.errors)
     return render_template('product_edit.html', title='Изменение', form=form, current_user=current_user, args=args,

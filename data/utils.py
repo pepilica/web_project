@@ -8,6 +8,15 @@ from data.products import Product
 from data.users import User
 
 
+def id_check_product(product_id):
+    """Проверка продукта на существование"""
+    session = db_session.create_session()
+    product = session.query(Product).filter(Product.id == product_id).first()
+    session.commit()
+    if not product:
+        abort(404)
+
+
 def success():
     """Возвращает json при удачной операции"""
     return jsonify({'success': 'OK'})

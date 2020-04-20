@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block main %}
 <h1 align="center">Изменение профиля</h1>
-<form action="" method="post">
+<form action="" method="post" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
     {{ form.csrf_token }}
     <p>
@@ -49,6 +49,21 @@
             </p>
         {% endfor %}
     </p>
+    <img src="/api/photos/{{photo_id}}" alt="photo" style="height: 200px; width: 200px">
+    <p>
+        {{ form.change_photo.label }}<br>
+        {{ form.change_photo(class="form-control", accept="image/png, image/jpeg, image/gif") }}<br>
+        {% for error in form.change_photo.errors %}
+            <p class="alert alert-danger" role="alert">
+                {{ error }}
+            </p>
+        {% endfor %}
+    </p>
+    <div class="btn-group-toggle" data-toggle="buttons">
+    <label class='btn btn-danger'>
+    	{{ form.delete_photo() }}  {{ form.delete_photo.label}}
+    </label>
+    </div>
     <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
     {{message}}
 </form>

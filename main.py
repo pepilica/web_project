@@ -23,7 +23,7 @@ from data.products import Product
 from data.products_resource import ProductsResource, ProductsListResource
 from data.users import User
 from data.users_resource import UsersListResource, UsersResource
-from data.utils import check_photo, get_coordinates, get_city, get_address, id_check_product
+from data.utils import check_photo, get_coordinates, get_city, get_address
 from data.constants import CATEGORIES, POSTS_PER_PAGE, SORT_BY
 
 port = int(os.environ.get("PORT", 5000))  # подключение к необходимому порту

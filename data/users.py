@@ -12,6 +12,7 @@ from data import db_session
 
 
 class User(SqlAlchemyBase, UserMixin, SerializerMixin):
+    """Таблица с пользователями"""
     __tablename__ = 'users'
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)

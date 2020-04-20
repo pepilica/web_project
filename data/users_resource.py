@@ -1,7 +1,5 @@
-import sys
-
 from flask import jsonify, request
-from flask_restful import reqparse, Api, Resource, abort
+from flask_restful import Resource, abort
 from data.users import User
 from data import db_session
 from data.utils import success, wrong_query, blank_query
@@ -11,6 +9,7 @@ LOGIN_ARR = ['email', 'password']
 
 
 def id_check(user_id):
+    """Проверка ID на валидность"""
     session = db_session.create_session()
     user = session.query(User).get(user_id)
     if not user:
@@ -18,7 +17,9 @@ def id_check(user_id):
 
 
 class UsersResource(Resource):
+    """Работа с конкретным пользователем"""
     def get(self, user_id):
+        """Получение пользователя"""
         id_check(user_id)
         session = db_session.create_session()
         user = session.query(User).get(user_id)
@@ -28,6 +29,7 @@ class UsersResource(Resource):
         })
 
     def delete(self, user_id):
+        """Удаление пользователя"""
         id_check(user_id)
         session = db_session.create_session()
         user = session.query(User).get(user_id)
@@ -36,6 +38,7 @@ class UsersResource(Resource):
         return success()
 
     def put(self, user_id):
+        """Изменение пользователя"""
         try:
             id_check(user_id)
             if not request.json:
@@ -61,7 +64,9 @@ class UsersResource(Resource):
 
 
 class UsersListResource(Resource):
+    """Работа с массивом пользователя"""
     def get(self):
+        """Получение списка всех пользователей"""
         session = db_session.create_session()
         users = session.query(User).all()
         return jsonify({
@@ -70,6 +75,7 @@ class UsersListResource(Resource):
         })
 
     def post(self):
+        """Создание нового пользователя"""
         session = db_session.create_session()
         args = request.json
         print(args)
@@ -99,6 +105,7 @@ class UsersListResource(Resource):
         return success()
     
     def put(self):
+        """Процедура логина"""
         try:
             session = db_session.create_session()
             args = request.json

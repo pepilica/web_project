@@ -8,27 +8,23 @@ from data.products import Product
 from data.users import User
 
 
-def id_check_product(product_id):
-    session = db_session.create_session()
-    product = session.query(Product).filter(Product.id == product_id).first()
-    session.commit()
-    if not product:
-        abort(404)
-
-
 def success():
+    """Возвращает json при удачной операции"""
     return jsonify({'success': 'OK'})
 
 
 def wrong_query():
+    """Возвращает json при неправильном запросе"""
     return jsonify({'error': 'Неправильный запрос'})
 
 
 def blank_query():
+    """Возвращает json при пустом запросе"""
     return jsonify({'error': 'Пустой запрос'})
 
 
 def check_address(address):
+    """Проверка адреса"""
     geocoder_params = {
         "apikey": GEOCODER_APIKEY,
         "geocode": address,
@@ -45,11 +41,13 @@ def check_address(address):
 
 
 def check_photo(image):
+    """Проверка фотографии на соответствие размерам"""
     x, y = image.size
     return 200 <= min(x, y) and max(x, y) <= 2000
 
 
 def get_coordinates(address):
+    """Находит кординаты по адресу"""
     geocoder_params = {
         "apikey": GEOCODER_APIKEY,
         "geocode": address,
@@ -66,6 +64,7 @@ def get_coordinates(address):
 
 
 def get_city(coordinates):
+    """Находит город/область по координатам/адресу"""
     geocoder_params = {
         "apikey": GEOCODER_APIKEY,
         "geocode": ','.join(map(str, coordinates)) if type(coordinates) != str else coordinates,
@@ -88,6 +87,7 @@ def get_city(coordinates):
 
 
 def get_address(coords):
+    """Получает адрес по координатам"""
     geocoder_params = {
         "apikey": GEOCODER_APIKEY,
         "geocode": ','.join(map(str, coords)),

@@ -1,10 +1,10 @@
 from flask import jsonify, request, url_for
 from data.categories import Category
-from flask_restful import reqparse, Api, Resource, abort
+from flask_restful import Resource, abort
 from data.products import Product
 from data import db_session
 from data.users import User
-from data.utils import get_coordinates, success, blank_query, wrong_query
+from data.utils import success, blank_query, wrong_query
 from datetime import datetime
 
 CREATE_ARR = ['name', 'user_id', 'description', 'cost', 'photos', 'point',
@@ -12,6 +12,7 @@ CREATE_ARR = ['name', 'user_id', 'description', 'cost', 'photos', 'point',
 
 
 def id_check_product(product_id):
+    """Проверка ID продукта на валидность"""
     session = db_session.create_session()
     product = session.query(Product).filter(Product.id == product_id).first()
     if not product:
@@ -19,6 +20,7 @@ def id_check_product(product_id):
 
 
 def id_check_user(user_id):
+    """Проверка ID пользователя на валидность"""
     session = db_session.create_session()
     user = session.query(User).get(user_id)
     if not user:
@@ -26,7 +28,9 @@ def id_check_user(user_id):
 
 
 class ProductsResource(Resource):
+    """Работа с продуктом"""
     def get(self, product_id):
+        """Получение данных о продукте"""
         id_check_product(product_id)
         session = db_session.create_session()
         product = session.query(Product).get(product_id)
@@ -37,6 +41,7 @@ class ProductsResource(Resource):
         })
 
     def delete(self, product_id):
+        """Удаление продукта"""
         id_check_product(product_id)
         session = db_session.create_session()
         product = session.query(Product).get(product_id)
@@ -45,6 +50,7 @@ class ProductsResource(Resource):
         return success()
 
     def put(self, product_id):
+        """Изменение продукта"""
         try:
             id_check_product(product_id)
             if not request.json:
@@ -59,8 +65,6 @@ class ProductsResource(Resource):
             product.description = args['description']
             product.cost = args['cost']
             product.is_active = args['is_active']
-#            product.photos = str(args['photos']),
-#            product.category = session.query(Category).filter(Category.identifier == args['category']).first().id if session.query(Category).filter(Category.identifier == args['category']).first() else None,
             product.radius = args['radius']
             product.contact_email = args['email']
             product.contact_number = args['number']
@@ -72,7 +76,9 @@ class ProductsResource(Resource):
 
 
 class ProductsListResource(Resource):
+    """Работа со списком продуктов"""
     def get(self):
+        """Получение списка продуктов с учетом фильтров"""
         session = db_session.create_session()
         products = session.query(Product)
         next_url, prev_url = None, None
@@ -119,6 +125,7 @@ class ProductsListResource(Resource):
         })
 
     def post(self):
+        """Создание продукта"""
         session = db_session.create_session()
         args = request.json
         print(args)

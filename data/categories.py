@@ -4,6 +4,7 @@ from sqlalchemy import orm
 
 
 class Category(SqlAlchemyBase):
+    """Таблица с категориями"""
     __tablename__ = 'categories'
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     category = sqlalchemy.Column(sqlalchemy.String, nullable=True)

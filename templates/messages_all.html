@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="conversation-wrap">
+	{% for item in users %}
+		{% set user = session.query(User).get(item[0]) %}
+		{% set message = item[1] %}
+            <div class="media conversation">
+                <a class="pull-left" href="#">
+                    <img class="media-object" data-src="holder.js/64x64" alt="64x64" style="width: 50px; height: 50px;" src=/api/photos/{{user.photo_id}}">
+                </a>
+                <div class="media-body">
+                    <a href='/users/{{user.id}}' class="media-heading">{{user.name}} {{user.surname}}</a>
+                    <small>{{message.body}}</small>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

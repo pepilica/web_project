@@ -5,6 +5,7 @@ from sqlalchemy import orm
 
 
 class Product(SqlAlchemyBase, SerializerMixin):
+    """Таблица с товарами"""
     __tablename__ = 'products'
     id = sqlalchemy.Column(sqlalchemy.Integer,
                            primary_key=True, autoincrement=True)

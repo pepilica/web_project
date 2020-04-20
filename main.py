@@ -1,13 +1,11 @@
-import inspect
 import flask_moment
 import base64
 import io
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from paginate_sqlalchemy import SqlalchemyOrmPage
 from PIL import Image
-from flask import Flask, render_template, redirect, jsonify, make_response, request, flash, url_for, current_app, \
-    get_flashed_messages
+from flask import Flask, render_template, redirect, jsonify, request, flash
 from flask_login import LoginManager, current_user, login_user, login_required, logout_user
 from flask_restful import Api, abort
 from flask_wtf import FlaskForm
@@ -27,9 +25,9 @@ from data.users import User
 from data.users_resource import UsersListResource, UsersResource
 from data.utils import check_photo, get_coordinates, get_city, get_address, id_check_product
 from data.constants import CATEGORIES, POSTS_PER_PAGE, SORT_BY
-port = int(os.environ.get("PORT", 5000))
 
-app = Flask(__name__)
+port = int(os.environ.get("PORT", 5000))  # подключение к необходимому порту
+app = Flask(__name__)  # здесь и далее инициализация приложения
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 app.config['SQLALCHEMY_ECHO'] = True
 login_manager = LoginManager()
@@ -43,6 +41,8 @@ user_api.add_resource(PhotosListResource, '/api/photos')
 user_api.add_resource(ProductsResource, '/api/products/<int:product_id>')
 user_api.add_resource(ProductsListResource, '/api/products')
 
+
+#  Формы для приложения
 
 class ConfirmForm(FlaskForm):
     confirm = BooleanField("Да, я согласен", validators=[DataRequired()])
@@ -114,12 +114,14 @@ class ProductForm(FlaskForm):
 
 @login_manager.user_loader
 def load_user(user_id):
+    """Загрузчик пользователя"""
     session = db_session.create_session()
     return session.query(User).get(user_id)
 
 
 @app.route('/register', methods=['POST', 'GET'])
 def register():
+    """Регистрация"""
     if current_user.is_authenticated:
         return redirect('/')
     form = RegisterForm()
@@ -176,6 +178,7 @@ def register():
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
+    """Логин"""
     if current_user.is_authenticated:
         print(0)
         return redirect('/')
@@ -203,6 +206,7 @@ def login():
 @app.route('/')
 @app.route('/index')
 def main():
+    """Титульная страница"""
     return render_template('index.html', title='Магазин', current_user=current_user, args=None,
                            session=db_session.create_session(), Category=Category)
 
@@ -210,12 +214,14 @@ def main():
 @app.route('/logout')
 @login_required
 def logout():
+    """Выход из аккаунта"""
     logout_user()
     return redirect("/")
 
 
 @app.route('/products', methods=['POST', 'GET'])
 def products_main():
+    """Показ товаров"""
     form = ProductFilterForm()
     page = request.args.get('page', 1, type=int)
     sort_by = SORT_BY
@@ -254,6 +260,7 @@ def products_main():
 @app.route('/products/add', methods=['POST', "GET"])
 @login_required
 def add_product():
+    """Создание товара"""
     form = ProductForm()
     if form.validate_on_submit():
         photos = []
@@ -320,6 +327,7 @@ def add_product():
 
 @app.route('/users/<int:user_id>')
 def user_profile(user_id):
+    """Профиль пользователя"""
     response = get(f'http://0.0.0.0:{port}/api/users/{user_id}').json()
     session = db_session.create_session()
     user = session.query(User).get(user_id)
@@ -353,6 +361,7 @@ def user_profile(user_id):
 @app.route('/users/<int:user_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_user(user_id):
+    """Изменение профиля пользователя"""
     response = get(f'http://0.0.0.0:{port}/api/users/{user_id}').json()
     args = response['user']
     if current_user.id != user_id:
@@ -388,6 +397,7 @@ def edit_user(user_id):
 @app.route('/send_message/<user_id>', methods=['GET', 'POST'])
 @login_required
 def send_message(user_id):
+    """Отправка сообщений"""
     session = db_session.create_session()
     work_user = session.query(User).get(current_user.id)
     user = session.query(User).get(user_id)
@@ -407,6 +417,7 @@ def send_message(user_id):
 
 @app.route('/products/<int:product_id>')
 def watch_product(product_id):
+    """Страница объявления"""
     id_check_product(product_id)
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     if 'product' in response.keys():
@@ -417,6 +428,7 @@ def watch_product(product_id):
 @app.route('/products/<int:product_id>/buy')
 @login_required
 def buy_product(product_id):
+    """Покупка продукта"""
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     if 'product' in response.keys():
         args = response['product']
@@ -438,6 +450,7 @@ def buy_product(product_id):
 @app.route('/products/<int:product_id>/change_state')
 @login_required
 def change_state(product_id):
+    """Изменение состояния продукта (вкл/выкл)"""
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     print(response)
     args = response['product']
@@ -458,6 +471,7 @@ def change_state(product_id):
 @app.route('/messages')
 @login_required
 def messages():
+    """Страница с входящими сообщениями"""
     session = db_session.create_session()
     current_user.last_message_read_time = datetime.utcnow()
     session.merge(current_user)
@@ -490,6 +504,7 @@ def messages():
 @app.route('/products/<int:product_id>/delete', methods=['GET', 'POST'])
 @login_required
 def delete_product(product_id):
+    """Удаление объявления"""
     id_check_product(product_id)
     form = ConfirmForm()
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
@@ -511,6 +526,7 @@ def delete_product(product_id):
 @app.route('/products/<int:product_id>/edit', methods=['GET', 'POST'])
 @login_required
 def edit_product(product_id):
+    """Изменение объявления"""
     id_check_product(product_id)
     form = ProductForm()
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
@@ -602,6 +618,7 @@ def edit_product(product_id):
 @app.route('/notifications')
 @login_required
 def notifications():
+    """Уведомления"""
     since = request.args.get('since', 0.0, type=float)
     notifications = current_user.notifications.filter(
         Notification.timestamp > since).order_by(Notification.timestamp.asc())
@@ -613,5 +630,6 @@ def notifications():
 
 
 if __name__ == '__main__':
+    #  Запуск приложения
     db_session.global_init(os.path.join('db', 'shop.sqlite'))
     app.run(host='0.0.0.0', port=port, debug=True)

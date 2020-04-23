@@ -17,6 +17,7 @@ from wtforms.validators import DataRequired, Length, NumberRange, Optional
 from data.categories import Category
 from data import db_session
 from data.messages import Message
+from data.messages_resource import MessagesResource, MessagesListResource
 from data.notifications import Notification
 from data.photos_resource import PhotosListResource, PhotosResource
 from data.products import Product
@@ -40,6 +41,8 @@ user_api.add_resource(PhotosResource, '/api/photos/<int:photo_id>')
 user_api.add_resource(PhotosListResource, '/api/photos')
 user_api.add_resource(ProductsResource, '/api/products/<int:product_id>')
 user_api.add_resource(ProductsListResource, '/api/products')
+user_api.add_resource(MessagesResource, '/api/messages/<int:message_id>')
+user_api.add_resource(MessagesListResource, '/api/messages')
 
 
 #  Формы для приложения
@@ -456,13 +459,18 @@ def send_message(user_id):
     session.commit()
     form = MessageForm()
     if form.validate_on_submit():
-        msg = Message(author=work_user, recipient=user,
-                      body=form.message.data)
-        session = db_session.create_session()
-        session.merge(msg)
-        session.commit()
-        flash('Сообщение отправлено!')
-        return redirect(f'/users/{user_id}')
+        response = post(f'http://0.0.0.0:{port}/api/messages', json={
+            'sender_id': work_user.id,
+            'recipient_id': user_id,
+            'body': form.message.data,
+            'password': work_user.hashed_password
+        }).json()
+        if 'success' in response.keys():
+            flash('Сообщение отправлено!')
+            return redirect(f'/users/{user_id}')
+        flash(response['error'])
+        return render_template('send_message.html', title='Отправить сообщение',
+                               form=form, user=user, args=None)
     return render_template('send_message.html', title='Отправить сообщение',
                            form=form, user=user, args=None)
 
@@ -532,7 +540,6 @@ def messages():
     session = db_session.create_session()
     page = request.args.get('page', 1, type=int)
     user = session.query(User).get(current_user.id)
-    session.commit()
     next_url, prev_url = None, None
     messages = user.messages_received.order_by(
         Message.timestamp.desc())
@@ -540,6 +547,7 @@ def messages():
     messages_sent = user.messages_sent.order_by(
         Message.timestamp.desc())
     print('$$$', messages_sent.all())
+    session.commit()
     if messages:
         page_cur = SqlalchemyOrmPage(messages, page=page, items_per_page=5)
         if page <= page_cur.item_count:

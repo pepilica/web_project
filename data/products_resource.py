@@ -75,7 +75,7 @@ class ProductsResource(Resource):
             session.commit()
             return success()
         except Exception as e:
-            return jsonify({'error': args['photos'] + ' ' + args['category']})
+            return jsonify({'error': e.__repr__()})
 
 
 class ProductsListResource(Resource):

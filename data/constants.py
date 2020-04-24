@@ -17,4 +17,3 @@ CATEGORIES = {'Траспорт': 'transport',
               'Хобби и отдых': 'hobby',
               'Животные': 'pets',
               'Для бизнеса': 'business'}
-TOKEN = '1134636723:AAHoACxkUD0Dg4IB7vfGfZLKrq0nwn12RXA'

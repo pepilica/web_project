@@ -1,13 +1,15 @@
+import io
 import os
+from PIL import Image
 
 from data import db_session
 from data.categories import Category
-from data.products import Product
+import requests
 
-from telegram.ext import Updater, MessageHandler, Filters, CallbackQueryHandler, ConversationHandler, CommandHandler
-from telegram import InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram import InlineKeyboardMarkup
-from data.constants import TOKEN
+from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
+from telegram import KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from config import TOKEN
+from data.photos import Photo
 from data.users import User
 
 
@@ -21,28 +23,19 @@ class Bot:
         self.buy = False
 
         self.session = db_session.create_session()
-        self.all_users = [user for user in self.session.query(User).all()]
-        self.categories = [category.category for category in self.session.query(Category).all()]
-        self.products = {
-            'Транспорт': [],
-            'Недвижимость': [],
-            'Работа': [],
-            'Услуги': [],
-            'Личные вещи': [],
-            'Для дома и дачи': [],
-            'Бытовая электроника': [],
-            'Хобби и отдых': [],
-            'Животные': [],
-            'Для бизнеса': []
-        }
-        self.index_category = {}
-        for category in self.session.query(Category):
-            self.index_category[category.id] = category.category
-        for product in self.session.query(Product):
-            if self.index_category[product.category] in self.products.keys():
-                self.products[self.index_category[product.category]].append(product)
-            else:
-                print(f'{product.name} не будет находиться в списке продуктов!')
+        self.all_users = requests.get(f'http://localhost:5000/api/users').json()['user']
+        self.categories = requests.get(f'http://localhost:5000/api/products').json()['product']
+        self.categories_index = {}
+        for i in self.session.query(Category).all():
+            self.categories_index[i.id] = i.category
+        self.products = {}
+        for i in self.categories:
+            if not self.categories_index[i['category']] in self.products.keys():
+                self.products[self.categories_index[i['category']]] = [i]
+            elif self.categories_index[i['category']] in self.products.keys():
+                self.products[self.categories_index[i['category']]].append(i)
+        for photo in self.session.query(Photo):
+            Image.open(io.BufferedReader(io.BytesIO(photo.photo))).convert('RGB').save(f'photos/{photo.id}.jpg')
 
         self.user = None
         self.category = None
@@ -67,8 +60,10 @@ class Bot:
         self.category_button_8 = 'Животные'
         self.category_button_9 = 'Для бизнеса'
 
+        self.request_kward = {'proxy_url': 'socks5://127.0.0.1:9150'}
+
     def first_keyboard(self):
-        """Клавиатура №1"""
+        """Клавиатура стартового меню авторизации"""
         keyboard = [
             [
                 KeyboardButton(self.button_log_in),
@@ -78,7 +73,7 @@ class Bot:
         return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
     def start_keyboard(self):
-        """Клавиатура №2"""
+        """Клавиатура возвращения меню авторизации"""
         keyboard = [
             [
                 KeyboardButton(self.button_start)
@@ -87,7 +82,7 @@ class Bot:
         return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
     def start_logout_keyboard(self):
-        """Клавиатура №3"""
+        """Клавиатура для выхода из аккаунта и возвращения в меню магазина"""
         keyboard = [
             [
                 KeyboardButton(self.button_start),
@@ -97,7 +92,7 @@ class Bot:
         return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
     def categories_keyboard(self):
-        """Клавиатура №%"""
+        """Клавиатура с категориями"""
         keyboard = [
             [
                 KeyboardButton(self.category_button_0),
@@ -123,7 +118,7 @@ class Bot:
         return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
     def menu_keyboard(self):
-        """Клавиатура №5"""
+        """Клавиатура стартового меню магазина"""
         keyboard = [
             [
                 KeyboardButton(self.menu_button_0),
@@ -180,7 +175,7 @@ class Bot:
             self.category = None
             self.product = None
             self.buy = False
-            update.message.reply_text(f'Пользователь {self.user.name.title()} вышел из аккаунта!',
+            update.message.reply_text(f'Пользователь {self.user["name"].title()} вышел из аккаунта!',
                                       reply_markup=self.start_keyboard())
             self.user = None
             return self.authorization(update, context)
@@ -216,7 +211,7 @@ class Bot:
 
     def success_authorization(self, update, context):
         """Главное меню (доступное после авторизации)"""
-        update.message.reply_text(f'{self.user.name.title()}, добро пожаловать в магазин!\n'
+        update.message.reply_text(f'{self.user["name"].title()}, добро пожаловать в магазин!\n'
                                   f'Выберите дальнейшие действия.\n'
                                   f'Если вы хотите выйти из аккаунта, воспользуйтесь кнопкой /logout\n'
                                   f'Чтобы вернуться в меню магазина, воспользуйтесь кнопкой /start',
@@ -229,7 +224,7 @@ class Bot:
 
     def selected_category(self, update, context):
         """Показ товаров заданной категории"""
-        update.message.reply_text(f'{self.user.name.title()}, вы выбрали категорию {self.category}.\n'
+        update.message.reply_text(f'{self.user["name"].title()}, вы выбрали категорию {self.category}.\n'
                                   f'Сейчас мы предоставим вам список товаров.\n'
                                   f'Для того, чтобы купить товар, выберите его ID.',
                                   reply_markup=self.start_logout_keyboard())
@@ -239,34 +234,34 @@ class Bot:
     def seller_name(self, user_id):
         """Возвращает имя продавца"""
         for i in self.all_users:
-            if i.id == user_id:
-                return i.name
+            if i["email"] == user_id:
+                return i["name"]
         return 'не указано'
 
     def select_product(self, update, context, i):
         """Процедура вывода объявлений на экран"""
         info = ''
-        info += f'ID товара: {i.id}\n'
-        info += f'Наименование товара: {i.name}\n'
-        info += f'Цена: {i.cost} руб.\n'
-        if i.description:
-            info += f'Описание: {i.description}\n'
+        info += f'ID товара: {i["id"]}\n'
+        info += f'Наименование товара: {i["name"]}\n'
+        info += f'Цена: {i["cost"]} руб.\n'
+        if i["description"]:
+            info += f'Описание: {i["description"]}\n'
         else:
             info += f'Описание: нет описания\n'
-        info += f'Имя продавца: {self.seller_name(i.user_id)}\n'
-        info += f'Контактный номер: {i.contact_number}'
+        info += f'Имя продавца: {self.seller_name(i["contact_email"])}\n'
+        info += f'Контактный номер: {i["contact_number"]}'
         update.message.reply_text(info,
                                   reply_markup=self.start_logout_keyboard())
-        return self.send_photo(update, context, status='Product', i=i.photos)
+        return self.send_photo(update, context, status='Product', i=i["photos"])
 
     def send_photo(self, update, context, status=None, i=None):
         """Процедура отправки фото"""
         if status == 'Account':
-            if self.user.photo_id:
+            if self.user["photo_id"]:
                 try:
-                    file = open(f'photos/{self.user.photo_id - 1}.jpg', 'rb')
+                    file = open(f'photos/{self.user["photo_id"] - 1}.jpg', 'rb')
                 except Exception:
-                    file = open(f'photos/{self.user.photo_id - 1}.png', 'rb')
+                    file = open(f'photos/{self.user["photo_id"] - 1}.png', 'rb')
             else:
                 try:
                     file = open(f'photos/0.jpg', 'rb')
@@ -289,16 +284,16 @@ class Bot:
     def account(self, update, context):
         """Экран с данными о пользователе"""
         update.message.reply_text(f'Данные пользователя:\n'
-                                  f'Фамилия: {self.user.surname}\n'
-                                  f'Имя: {self.user.name}\n'    
-                                  f'Адрес: {self.user.address}\n'
-                                  f'Контактный номер: {self.user.mobile_telephone}\n',
+                                  f'Фамилия: {self.user["surname"]}\n'
+                                  f'Имя: {self.user["name"]}\n'    
+                                  f'Адрес: {self.user["address"]}\n'
+                                  f'Контактный номер: {self.user["mobile_telephone"]}\n',
                                   reply_markup=self.menu_keyboard())
         return self.send_photo(update, context, status='Account')
 
     def selected_product(self, update, context):
         """Процедура обработки выбранного товара"""
-        update.message.reply_text(f'Вы выбрали товар {self.product.name}!\n'
+        update.message.reply_text(f'Вы выбрали товар {self.product["name"]}!\n'
                                   f'Мы скоро уведомим продавца о том, что вы хотите купить товар.\n'
                                   f'Также вы можете сами связаться с ним по телефону.',
                                   reply_markup=self.start_logout_keyboard())
@@ -323,7 +318,9 @@ class Bot:
                     if user.email == email and user.check_password(password):
                         self.login_status = False
                         self.authorization_status = True
-                        self.user = user
+                        for i in self.all_users:
+                            if user.email == i["email"]:
+                                self.user = i
                         return self.success_authorization(update, context)
                     elif user.email == email and not user.check_password(password):
                         return self.errors(update, context, status='Password')
@@ -343,16 +340,20 @@ class Bot:
         if self.authorization_status:
             if self.buy:
                 if self.category is None:
-                    if message in self.categories:
+                    if message in self.products.keys():
                         self.category = message
                         return self.selected_category(update, context)
                     else:
                         return self.errors(update, context, status='Category not found')
                 elif self.category:
+                    print(1)
                     if self.product is None:
-                        if message in [str(i.id) for i in self.products[self.category]]:
+                        print(self.products)
+                        print(self.category)
+                        print(self.products[self.category])
+                        if message in [str(i["id"]) for i in self.products[self.category]]:
                             for i in self.products[self.category]:
-                                if str(i.id) == message:
+                                if str(i["id"]) == message:
                                     self.product = i
                             return self.selected_product(update, context)
                         else:
@@ -367,7 +368,7 @@ class Bot:
 
     def main(self):
         """Создание бота"""
-        updater = Updater(token=TOKEN, use_context=True)
+        updater = Updater(token=TOKEN, use_context=True, request_kwargs=self.request_kward)
         dispatcher = updater.dispatcher
 
         start_handler = CommandHandler('start', self.authorization)

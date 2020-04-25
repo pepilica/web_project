@@ -23,8 +23,8 @@ class Bot:
         self.buy = False
 
         self.session = db_session.create_session()
-        self.all_users = requests.get(f'http://localhost:5000/api/users').json()['user']
-        self.categories = requests.get(f'http://localhost:5000/api/products').json()['product']
+        self.all_users = requests.get(f'http://localhost:{port}/api/users').json()['user']
+        self.categories = requests.get(f'http://localhost:{port}/api/products').json()['product']
         self.categories_index = {}
         for i in self.session.query(Category).all():
             self.categories_index[i.id] = i.category
@@ -387,4 +387,5 @@ class Bot:
 if __name__ == '__main__':
     #  запуск нужных для работы утилит
     db_session.global_init(os.path.join('db', 'shop.sqlite'))
+    port = int(os.environ.get("PORT", 5000))
     Bot().main()

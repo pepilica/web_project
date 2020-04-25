@@ -603,13 +603,19 @@ def edit_product(product_id):
         form.name.data = args['name']
         form.description.data = args['description']
         form.cost.data = int(args['cost'])
-        form.radius.data = int(args['radius']) if args['radius'] > 0 else ''
+        if args['radius']:
+            form.radius.data = int(args['radius']) if args['radius'] > 0 else ''
+        else:
+            form.radius.data = ''
         if session.query(Category).get(args['category']):
             form.category.data = session.query(Category).get(args['category']).identifier
         else:
             form.category.data = 'no'
         form.geopoint.data = get_address((args['point_longitude'], args['point_latitude']))
-        form.actual_address.data = True if args['radius'] < 1 else False
+        if args['radius']:
+            form.actual_address.data = True if args['radius'] < 1 else False
+        else:
+            form.actual_address.data = False
         form.email.data = args['contact_email']
         form.phone.data = args['contact_number']
         print(args['photos'])
@@ -704,4 +710,4 @@ def notifications():
 if __name__ == '__main__':
     #  Запуск приложения
     db_session.global_init(os.path.join('db', 'shop.sqlite'))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port)

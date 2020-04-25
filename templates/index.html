@@ -3,10 +3,12 @@
 <div class='container-fluid'>
 	<div class='wrapper row'>
 		<div class='preview col-md-8'>
+			{% if current_user.is_authenticated %}
+			<h3>Добро пожаловать в <strong>магазин</strong>!</h3>
+			{% else %}
 			<h3>Это площадка для <strong>покупки и размещения</strong> товаров. <br>
-			Зарегистрируйтесь или войдите, чтобы совершать покупки или размещать объявления.<br>
-			Надеюсь, что это будет работать.
-		</h3>
+			Зарегистрируйтесь или войдите, чтобы совершать покупки или размещать объявления.<br></h3>
+			{% endif %}
 		</div>
 		<div class='preview col-md-4'>
 			<ul>

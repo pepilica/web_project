@@ -35,10 +35,14 @@
 						<p class="product-description">{{args['description']}}</p>
 						<a href="/users/{{args['user_id']}}">Профиль продавца</a>
 						<h4 class="price">Цена: <span>{{args['cost']}} ₽</span></h4>
+						{% if args['radius'] %}
 						{% if args['radius'] > 0 %}
 						<div id="mapWithRadius" name="mapWithRadius" style="width: 300px; height: 300px"></div>
 						{% else %}
 						<div id="mapWithoutRadius" name="mapWithoutRadius" style="width: 300px; height: 300px"></div>
+						{% endif %}
+						{% else %}
+						<p>Нет адреса</p>
 						{% endif %}
 						<div class="action">
 							{% if current_user.is_authenticated %}

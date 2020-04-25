@@ -23,8 +23,8 @@ class Bot:
         self.buy = False
 
         self.session = db_session.create_session()
-        self.all_users = requests.get(f'http://localhost:{port}/api/users').json()['user']
-        self.categories = requests.get(f'http://localhost:{port}/api/products').json()['product']
+        self.all_users = requests.get(f'http://0.0.0.0:{port}/api/users').json()['user']
+        self.categories = requests.get(f'http://0.0.0.0:{port}/api/products').json()['product']
         self.categories_index = {}
         for i in self.session.query(Category).all():
             self.categories_index[i.id] = i.category

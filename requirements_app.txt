@@ -1,3 +1,4 @@
+gunicorn==20.0.4
 Flask==1.1.1
 aniso8601==8.0.0
 certifi==2019.11.28
@@ -45,4 +46,3 @@ tornado==6.0.4
 urllib3==1.25.8
 Werkzeug==1.0.0
 WTForms==2.2.1
-gunicorn==20.0.4

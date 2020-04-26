@@ -2,7 +2,6 @@ import sqlalchemy as sa
 import sqlalchemy.orm as orm
 from sqlalchemy.orm import Session
 import sqlalchemy.ext.declarative as dec
-import inspect
 
 SqlAlchemyBase = dec.declarative_base()
 
@@ -28,6 +27,4 @@ def global_init(db_file):
 
 def create_session() -> Session:
     global __factory
-    print('Открыто')
-    print(inspect.stack()[1][3])
     return __factory()

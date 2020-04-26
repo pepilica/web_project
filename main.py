@@ -153,8 +153,6 @@ def register():
             return render_template('register.html', title='Регистрация',
                                    form=form,
                                    message="Пароли не сходятся", current_user=current_user, args=None)
-        print(form.photo.data)
-        print(form.photo.data.content_type)
         if not form.photo.data.filename:
             photo_output = 1
         else:
@@ -189,7 +187,6 @@ def register():
             'password': form.password.data,
             'photo_id': photo_output
         }).json()
-        print(response)
         if 'success' in response.keys():
             return redirect('/')
         else:
@@ -203,7 +200,6 @@ def register():
 def login():
     """Логин"""
     if current_user.is_authenticated:
-        print(0)
         return redirect('/')
     form = LoginForm()
     if form.validate_on_submit():
@@ -211,11 +207,9 @@ def login():
             'email': form.email.data,
             'password': form.password.data
         }).json()
-        print(response)
         if 'success' in response.keys():
             session = db_session.create_session()
             user = session.query(User).get(response['user_id'])
-            print(form.remember_me.data)
             login_user(user, remember=form.remember_me.data)
             return redirect('/')
         else:
@@ -290,7 +284,6 @@ def add_product():
         pics = request.files.getlist(form.photos.name)
         if pics:
             for picture_upload in pics:
-                print(picture_upload.filename)
                 if not picture_upload.filename:
                     photos = ['2']
                     break
@@ -323,7 +316,6 @@ def add_product():
             radius = form.radius.data
         else:
             radius = 500
-        print(get_coordinates(form.geopoint.data))
         response = post(f'http://0.0.0.0:{port}/api/products', json={
             'user_id': current_user.id,
             'name': form.name.data,
@@ -336,7 +328,6 @@ def add_product():
             'photos': ','.join(photos),
             'category': form.category.data
         }).json()
-        print(response)
         if 'success' in response.keys():
             flash('Товар успешно добавлен')
             return redirect('/products')
@@ -344,7 +335,6 @@ def add_product():
             return render_template('product_create.html', title='Создание',
                                    form=form,
                                    message=response['error'], current_user=current_user, args=None)
-    print(form.errors)
     return render_template('product_create.html', title='Создание', form=form, current_user=current_user, args=None)
 
 
@@ -365,7 +355,6 @@ def user_profile(user_id):
         for i in range(len(active_dict)):
             if active_dict[i]['date']:
                 active_dict[i]['date'] = datetime.strptime(active_dict[i]['date'], '%Y-%m-%d %H:%M')
-                print(active_dict[i]['date'])
         finished_dict = [item.to_dict(only=('id', 'name', 'user_id', 'description', 'cost', 'is_active', 'photos',
                                             'point_longitude', 'point_latitude', 'radius', 'contact_email',
                                             'contact_number', 'category', 'date')) for item in finished]
@@ -398,7 +387,6 @@ def edit_user(user_id):
         form.phone.data = args['mobile_telephone']
     if form.validate_on_submit():
         if form.change_photo.data:
-            print(form.change_photo.data)
             picture_upload = form.change_photo.data
             if picture_upload.content_type in ('image/png', 'image/jpeg'):
                 photo = io.BytesIO(picture_upload.read())
@@ -436,7 +424,6 @@ def edit_user(user_id):
             'email': args['email'],
             'photo_id': photo_id
         }).json()
-        print(response)
         if 'success' in response.keys():
             flash('Изменения сохранены')
             return redirect(f'/users/{user_id}')
@@ -481,7 +468,6 @@ def watch_product(product_id):
     id_check_product(product_id)
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
     if 'product' in response.keys():
-        print(response['product']['photos'])
         return render_template('product.html', args=response['product'], get_address=get_address,
                                title=response['product']['name'])
 
@@ -513,7 +499,6 @@ def buy_product(product_id):
 def change_state(product_id):
     """Изменение состояния продукта (вкл/выкл)"""
     response = get(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
-    print(response)
     args = response['product']
     if args['user_id'] != current_user.id:
         abort(403)
@@ -543,10 +528,6 @@ def messages():
     next_url, prev_url = None, None
     messages = user.messages_received.order_by(
         Message.timestamp.desc())
-    print('$$$', messages.all())
-    messages_sent = user.messages_sent.order_by(
-        Message.timestamp.desc())
-    print('$$$', messages_sent.all())
     session.commit()
     if messages:
         page_cur = SqlalchemyOrmPage(messages, page=page, items_per_page=5)
@@ -556,8 +537,6 @@ def messages():
             prev_url = '/messages?page=' + str(page - 1) \
                 if page > 1 else None
             query = page_cur.items
-            print(page, query)
-            print(next_url, prev_url)
         else:
             return redirect('/messages?page=' + page_cur.item_count)
     else:
@@ -578,7 +557,6 @@ def delete_product(product_id):
         abort(403)
     if form.validate_on_submit():
         response = delete(f'http://0.0.0.0:{port}/api/products/{product_id}').json()
-        print(response)
         if 'success' in response.keys():
             flash('Товар успешно удален')
             return redirect('/products')
@@ -618,13 +596,11 @@ def edit_product(product_id):
             form.actual_address.data = False
         form.email.data = args['contact_email']
         form.phone.data = args['contact_number']
-        print(args['photos'])
     if form.validate_on_submit():
         photos = []
         pics = request.files.getlist(form.photos.name)
         if pics:
             for picture_upload in pics:
-                print(picture_upload.filename)
                 if not picture_upload.filename:
                     break
                 if picture_upload.content_type in ('image/png', 'image/jpeg'):
@@ -645,7 +621,6 @@ def edit_product(product_id):
                                                form=form, current_user=current_user,
                                                args=args, get_address=get_address, get_coordinates=get_coordinates)
                     photos.append(str(response_photo['photo_id']))
-                    print(str(response_photo['photo_id']))
                 else:
                     flash('Неверный формат файла')
                     return render_template('product_edit.html', title='Изменение',
@@ -665,7 +640,6 @@ def edit_product(product_id):
             category = ''
         else:
             category = category.id
-        print(get_coordinates(form.geopoint.data))
         response = put(f'http://0.0.0.0:{port}/api/products/{product_id}', json={
             'user_id': current_user.id,
             'name': form.name.data,
@@ -679,7 +653,6 @@ def edit_product(product_id):
             'photos': ','.join(photos),
             'category': category
         }).json()
-        print(response)
         if 'success' in response.keys():
             flash('Товар успешно изменен')
             return redirect(f'/products/{product_id}')
@@ -688,7 +661,6 @@ def edit_product(product_id):
             return render_template('product_edit.html', title='Изменение',
                                    form=form, current_user=current_user, args=args,
                                    get_address=get_address, get_coordinates=get_coordinates)
-    print(form.errors)
     return render_template('product_edit.html', title='Изменение', form=form, current_user=current_user, args=args,
                            get_address=get_address, get_coordinates=get_coordinates)
 

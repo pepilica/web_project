@@ -60,8 +60,7 @@ class Bot:
         self.category_button_8 = 'Животные'
         self.category_button_9 = 'Для бизнеса'
 
-        # self.request_kward = {'proxy_url': 'socks5://127.0.0.1:9150'}
-        self.request_kward = {}
+        self.request_kward = {'proxy_url': 'socks5://127.0.0.1:9150'}
 
     def first_keyboard(self):
         """Клавиатура стартового меню авторизации"""

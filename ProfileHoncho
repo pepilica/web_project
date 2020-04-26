@@ -1,1 +1,2 @@
-python: pip install -r requirements_app.txt && gunicorn main:application && python main_bot:application
+python: pip install -r requirements_app.txt && gunicorn main:application
+python: gunicorn main_bot:application

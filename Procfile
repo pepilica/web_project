@@ -1,2 +1,1 @@
-web: python main.py
-bot: python main_bot.py
+web: honcho -f ProfileHoncho start

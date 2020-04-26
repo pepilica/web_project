@@ -1,2 +1,3 @@
-first: pip install -r requirements_app.txt && python main.py
-second: pip install -r requirements_app.txt && python main_bot.py
+a: pip install -r requirements_app.txt
+first: python main.py
+second: python main_bot.py

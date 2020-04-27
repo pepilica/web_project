@@ -1,1 +1,1 @@
-web: honcho -f ProfileHoncho start
+web: python main.py

@@ -27,7 +27,7 @@ MarkupSafe==1.1.1
 networkx==2.3
 paginate==0.5.6
 paginate-sqlalchemy==0.3.0
-Pillow==5.4.1
+Pillow==8.3.2
 pycparser==2.20
 pyOpenSSL==19.1.0
 pyparsing==2.4.5
